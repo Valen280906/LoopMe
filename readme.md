@@ -1,3 +1,8 @@
+para arrancar:
+node backend/server.js
+admin@loopme.com
+1234
+
 # Documentación del Sistema LoopMe
 
 ## 1. División General del Sistema
@@ -162,3 +167,8 @@ El sistema se divide en un módulo administrativo interno para la gestión de in
 Para la autenticación del sistema LoopMe se decidió implementar un esquema basado en JSON Web Tokens (JWT), debido a que el sistema está desarrollado bajo una arquitectura cliente-servidor con Node.js como backend y un frontend independiente.
 
 JWT permite manejar sesiones de manera segura sin necesidad de almacenar estado en el servidor, permitiendo validar al usuario, proteger las rutas privadas del sistema y administrar diferentes niveles de acceso según rol (Administrador, Vendedor, Inventario). Además, facilita escalabilidad futura del proyecto.
+
+Se configuró el backend utilizando Node.js y Express, estableciendo una conexión real con MySQL mediante mysql2.
+
+Se implementó autenticación segura basada en JSON Web Tokens (JWT).
+Al iniciar sesión, el backend valida las credenciales en MySQL, genera un token firmado que contiene la información del usuario y su rol, y dicho token es usado para acceder a las secciones privadas del sistema.
