@@ -158,3 +158,7 @@ Para definir el alcance, el sistema NO incluye:
 
 ## 6. Justificación
 El sistema se divide en un módulo administrativo interno para la gestión de inventario, productos, ventas y usuarios, y un módulo público orientado a clientes para visualización de productos y compras. Esta separación garantiza seguridad, organización y claridad operativa entre la gestión interna de la tienda y la experiencia del cliente.
+
+Para la autenticación del sistema LoopMe se decidió implementar un esquema basado en JSON Web Tokens (JWT), debido a que el sistema está desarrollado bajo una arquitectura cliente-servidor con Node.js como backend y un frontend independiente.
+
+JWT permite manejar sesiones de manera segura sin necesidad de almacenar estado en el servidor, permitiendo validar al usuario, proteger las rutas privadas del sistema y administrar diferentes niveles de acceso según rol (Administrador, Vendedor, Inventario). Además, facilita escalabilidad futura del proyecto.
