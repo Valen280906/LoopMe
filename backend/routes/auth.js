@@ -55,7 +55,7 @@ router.post("/login", (req, res) => {
 module.exports = router;
 
 
-/*middleware luego
+
 function authMiddleware(req, res, next){
     const token = req.headers["authorization"];
 
@@ -73,4 +73,3 @@ function authMiddleware(req, res, next){
 }
 
 module.exports = authMiddleware;
-*/
