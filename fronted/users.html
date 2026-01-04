@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Gestión de Usuarios</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="p-4">
+
+<h2>Gestión de Usuarios</h2>
+<p id="info"></p>
+
+<hr>
+
+<h4>Registrar Usuario</h4>
+
+<div class="row">
+<div class="col-md-4">
+
+<input id="nombre" class="form-control mb-2" placeholder="Nombre">
+<input id="apellido" class="form-control mb-2" placeholder="Apellido">
+<input id="email" class="form-control mb-2" placeholder="Email">
+<input id="password" class="form-control mb-2" placeholder="Contraseña">
+
+<select id="rol" class="form-control mb-2">
+  <option value="Vendedor">Vendedor</option>
+  <option value="Inventario">Encargado Inventario</option>
+</select>
+
+<button onclick="crearUsuario()" class="btn btn-dark w-100">
+  Registrar
+</button>
+
+</div>
+</div>
+
+<hr>
+
+<h4>Usuarios Registrados</h4>
+
+<table class="table table-bordered">
+<thead>
+<tr>
+ <th>ID</th>
+ <th>Nombre</th>
+ <th>Email</th>
+ <th>Rol</th>
+ <th>Estado</th>
+ <th>Acción</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+
+<script>
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user"));
+
+if(!token) location.href="login.html";
+if(user.rol !== "Administrador"){
+    alert("Acceso solo Administrador");
+    location.href="dashboard.html";
+}
+
+document.getElementById("info").innerHTML =
+ "Administrador: "+ user.nombre;
+
+// LISTAR
+function cargarUsuarios(){
+ fetch("http://localhost:3000/api/users",{
+   headers:{ "Authorization":"Bearer "+token }
+ })
+ .then(r=>r.json())
+ .then(d=>{
+    if(!d.success) return;
+
+    let html="";
+    d.users.forEach(u=>{
+        html += `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.nombre} ${u.apellido || ""}</td>
+          <td>${u.email}</td>
+          <td>${u.rol}</td>
+          <td>${u.activo ? "Activo":"Inactivo"}</td>
+          <td>
+            <button class="btn btn-sm btn-${u.activo? 'danger':'success'}"
+              onclick="cambiarEstado(${u.id}, ${u.activo?0:1})">
+              ${u.activo? 'Desactivar':'Activar'}
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById("tabla").innerHTML = html;
+ });
+}
+
+cargarUsuarios();
+
+
+// CREAR
+function crearUsuario(){
+ const data = {
+  nombre: nombre.value,
+  apellido: apellido.value,
+  email: email.value,
+  password: password.value,
+  rol: rol.value
+ };
+
+ fetch("http://localhost:3000/api/users",{
+   method:"POST",
+   headers:{
+     "Content-Type":"application/json",
+     "Authorization":"Bearer "+token
+   },
+   body: JSON.stringify(data)
+ })
+ .then(r=>r.json())
+ .then(d=>{
+   alert(d.message);
+   cargarUsuarios();
+ });
+}
+
+// ACTIVAR / DESACTIVAR
+function cambiarEstado(id, estado){
+ fetch("http://localhost:3000/api/users/"+id+"/status",{
+   method:"PATCH",
+   headers:{
+     "Content-Type":"application/json",
+     "Authorization":"Bearer "+token
+   },
+   body: JSON.stringify({estado})
+ })
+ .then(r=>r.json())
+ .then(d=>{
+   alert(d.message);
+   cargarUsuarios();
+ });
+}
+</script>
+
+</body>
+</html>

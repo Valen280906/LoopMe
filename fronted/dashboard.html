@@ -16,10 +16,10 @@
 <script>
 // Verificar token
 const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user"));
+const user = JSON.parse(localStorage.getItem("user") || "null");
 
-if(!token){
-    alert("No tienes acceso, inicia sesión");
+if(!token || !user){
+    alert("Sesión inválida, inicia sesión de nuevo");
     window.location.href = "login.html";
 }
 

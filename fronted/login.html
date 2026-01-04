@@ -48,23 +48,31 @@ function login(){
         return;
     }
 
-    fetch("http://localhost:3000/api/auth/login",{
+    fetch("http://localhost:3000/api/auth/login", {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({email,password})
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ email, password })
     })
     .then(res => res.json())
-    .then(data =>{
-        if(data.success){
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
-            window.location.href = "dashboard.html";
-        }else{
-            document.getElementById("msg").innerHTML = data.message;
-        }
-    });
+    .then(data => {
+
+    console.log("RESPUESTA LOGIN ===>", data);
+
+    if(!data.success){
+        document.getElementById("msg").innerHTML = data.message;
+        return;
+    }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    alert("Login correcto");
+    window.location.href = "dashboard.html";
+});
+
 }
 </script>
+
 
 </body>
 </html>

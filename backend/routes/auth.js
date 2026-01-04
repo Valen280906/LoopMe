@@ -4,9 +4,9 @@ const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const SECRET = "LOOPME_SUPER_SECRET"; // sera luego .env
+const SECRET = "LOOPME_SUPER_SECRET";
 
-// login
+// LOGIN
 router.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -17,6 +17,7 @@ router.post("/login", (req, res) => {
     const sql = `SELECT id, nombre, rol, password, activo FROM usuarios WHERE email=?`;
 
     db.query(sql, [email], async (err, rows)=>{
+
         if(err) return res.json({ success:false, message:"Error servidor" });
 
         if(rows.length === 0)
@@ -27,7 +28,7 @@ router.post("/login", (req, res) => {
         if(!user.activo)
             return res.json({ success:false, message:"Usuario inactivo" });
 
-        // contraseña simple (temporal)
+        // TEMPORAL (sin bcrypt)
         if(password !== user.password){
             return res.json({ success:false, message:"Contraseña incorrecta" });
         }
@@ -53,23 +54,3 @@ router.post("/login", (req, res) => {
 });
 
 module.exports = router;
-
-
-
-function authMiddleware(req, res, next){
-    const token = req.headers["authorization"];
-
-    if(!token){
-        return res.json({ success:false, message:"Token requerido" });
-    }
-
-    try{
-        const decoded = jwt.verify(token.replace("Bearer ", ""), SECRET);
-        req.user = decoded;
-        next();
-    }catch{
-        return res.json({ success:false, message:"Token inválido o expirado" });
-    }
-}
-
-module.exports = authMiddleware;
