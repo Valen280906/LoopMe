@@ -39,7 +39,7 @@ CREATE TABLE productos (
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
     precio DECIMAL(10,2) NOT NULL,
-    talla ENUM('S','M','L','XL') NULL,
+    talla VARCHAR(20) NULL,
     color VARCHAR(40),
     activo BOOLEAN DEFAULT TRUE,
     categoria_id INT,
