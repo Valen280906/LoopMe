@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const upload = require('../multerConfig');
 
 // Obtener todos los productos (con inventario)
 router.get("/", (req, res) => {
@@ -57,11 +58,18 @@ router.get("/:id", (req, res) => {
     });
 });
 
-// Crear nuevo producto (solo admin)
-router.post("/", (req, res) => {
+// Crear nuevo producto con imagen
+router.post("/", upload.single('imagen'), (req, res) => {
+    let imagen_url = null;
+    
+    // Si hay imagen subida
+    if (req.file) {
+        imagen_url = `/uploads/${req.file.filename}`;
+    }
+    
     const { 
         nombre, descripcion, precio, talla, color, 
-        categoria_id, imagen_url, stock_actual, stock_minimo 
+        categoria_id, stock_actual, stock_minimo 
     } = req.body;
     
     if(!nombre || !precio) {
@@ -144,30 +152,37 @@ router.put("/:id", (req, res) => {
                     message: "Error al actualizar producto" 
                 });
             }
-            
-            // Actualizar inventario
-            const sqlInventario = `
-                UPDATE inventario 
-                SET stock_actual=?, stock_minimo=?
-                WHERE producto_id=?
-            `;
-            
-            db.query(sqlInventario, 
-                [stock_actual, stock_minimo, id], 
-                (errInv) => {
-                    if(errInv) {
-                        console.error(errInv);
-                        return res.status(500).json({ 
-                            success: false, 
-                            message: "Error al actualizar inventario" 
+            // Solo actualizar inventario si se enviaron datos de stock
+            if (stock_actual !== undefined || stock_minimo !== undefined) {
+                const sqlInventario = `
+                    UPDATE inventario 
+                    SET stock_actual=COALESCE(?, stock_actual), 
+                        stock_minimo=COALESCE(?, stock_minimo)
+                    WHERE producto_id=?
+                `;
+
+                db.query(sqlInventario, 
+                    [stock_actual, stock_minimo, id], 
+                    (errInv) => {
+                        if(errInv) {
+                            console.error(errInv);
+                            return res.status(500).json({ 
+                                success: false, 
+                                message: "Error al actualizar inventario" 
+                            });
+                        }
+
+                        return res.json({ 
+                            success: true, 
+                            message: "Producto actualizado exitosamente" 
                         });
-                    }
-                    
-                    res.json({ 
-                        success: true, 
-                        message: "Producto actualizado exitosamente" 
                     });
+            } else {
+                return res.json({ 
+                    success: true, 
+                    message: "Producto actualizado exitosamente" 
                 });
+            }
         });
 });
 

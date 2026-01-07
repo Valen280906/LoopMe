@@ -184,10 +184,11 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label">URL de Imagen</label>
-                                    <input type="text" id="imagen_url" class="form-control" 
-                                           placeholder="https://ejemplo.com/imagen.jpg">
-                                    <small class="text-muted">Puede dejar en blanco para imagen por defecto</small>
+                                    <label class="form-label">Imagen del Producto</label>
+                                    <input type="file" id="imagen_file" class="form-control" accept="image/*">
+                                    <small class="text-muted">Formatos aceptados: JPG, PNG, GIF, WebP (Máx. 5MB)</small>
+                                    <input type="hidden" id="imagen_url" value="">
+                                    <div id="imagen_preview" class="mt-2" style="max-width: 200px;"></div>
                                 </div>
                             </div>
                         </div>
@@ -251,6 +252,22 @@
             });
         }
 
+        // Previsualización de imagen
+        document.getElementById('imagen_file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('imagen_preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px;">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+
         // Cerrar sesión
         function logout() {
             if (confirm("¿Está seguro de cerrar sesión?")) {
@@ -308,7 +325,10 @@
         // Mostrar productos en la tabla
         function mostrarProductos(listaProductos) {
             const tbody = document.getElementById("tablaProductos");
-            
+            // Permisos: quién puede editar o eliminar
+            const puedeEditar = usuario.rol === 'Administrador' || usuario.rol === 'Inventario';
+            const puedeEliminar = usuario.rol === 'Administrador';
+
             if (listaProductos.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="text-center">No hay productos que coincidan</td></tr>`;
                 return;
@@ -349,11 +369,11 @@
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-primary" onclick="editarProducto(${producto.id})" 
-                                        ${usuario.rol !== 'Administrador' ? 'disabled' : ''}>
+                                        ${!puedeEditar ? 'disabled' : ''}>
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn btn-outline-danger" onclick="eliminarProducto(${producto.id})"
-                                        ${usuario.rol !== 'Administrador' ? 'disabled' : ''}>
+                                        ${!puedeEliminar ? 'disabled' : ''}>
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <button class="btn btn-outline-info" onclick="verDetalles(${producto.id})">
