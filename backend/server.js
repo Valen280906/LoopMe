@@ -35,7 +35,7 @@ app.use("/api/admin/users", authMiddleware, isAdmin, require("./routes/users"));
 app.use("/api/admin/inventory", authMiddleware, isInventario, require("./routes/inventory"));
 app.use("/api/admin/orders", authMiddleware, isVendedor, require("./routes/orders"));
 app.use("/api/admin/reports", authMiddleware, isAdmin, require("./routes/reports"));
-
+app.use("/api/payments", authMiddleware, require("./routes/payments"));
 // Manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);

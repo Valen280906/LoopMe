@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Pagos - LoopMe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .payment-method {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payment-method:hover, .payment-method.selected {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        .payment-method i {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: #6c757d;
+        }
+        .payment-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .status-success { background-color: #d4edda; color: #155724; }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        .credit-card-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .payment-processing {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .order-option {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .order-option:hover {
+            background-color: #f8f9fa;
+        }
+        .order-option.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <i class="fas fa-store"></i> LoopMe Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="productos.html"><i class="fas fa-tshirt"></i> Productos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="inventario.html"><i class="fas fa-boxes"></i> Inventario</a></li>
+                    <li class="nav-item"><a class="nav-link" href="pedidos.html"><i class="fas fa-shopping-cart"></i> Pedidos</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="pagos.html"><i class="fas fa-credit-card"></i> Pagos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="users.html"><i class="fas fa-users"></i> Usuarios</a></li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-cash-register me-2"></i>Procesar Pago</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Seleccionar Pedido</label>
+                            <select id="pedidoSelect" class="form-control" onchange="cargarDetallePedido()">
+                                <option value="">-- Seleccionar pedido --</option>
+                            </select>
+                            <small class="text-muted">O ingresa un ID manualmente:</small>
+                            <input type="text" id="pedidoIdManual" class="form-control mt-2" placeholder="ID del pedido">
+                        </div>
+                        
+                        <div id="orderDetails" style="display: none;">
+                            <div class="alert alert-info">
+                                <h6>Detalles del Pedido</h6>
+                                <p id="orderInfo"></p>
+                                <p id="orderTotal" class="fw-bold"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Monto a Pagar ($)</label>
+                            <input type="number" id="paymentAmount" class="form-control" min="1" step="0.01" placeholder="0.00">
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Método de Pago</h5>
+                        <div id="paymentMethods"></div>
+                        
+                        <div id="creditCardForm" class="credit-card-form" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Número de Tarjeta</label>
+                                <div class="input-group">
+                                    <input type="text" id="cardNumber" class="form-control" placeholder="4242 4242 4242 4242" maxlength="19">
+                                    <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">Fecha Expiración</label><input type="text" id="cardExpiry" class="form-control" placeholder="MM/YY"></div></div>
+                                <div class="col-md-6"><div class="mb-3"><label class="form-label">CVC</label><input type="text" id="cardCvc" class="form-control" placeholder="123" maxlength="4"></div></div>
+                            </div>
+                            <div class="mb-3"><label class="form-label">Nombre en Tarjeta</label><input type="text" id="cardName" class="form-control" placeholder="JUAN PEREZ"></div>
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mt-3" onclick="procesarPago()">
+                            <i class="fas fa-lock me-2"></i>Procesar Pago
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="fas fa-spinner me-2"></i>Estado del Pago</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="paymentStatus" class="text-center">
+                            <p class="text-muted">No hay pago en proceso</p>
+                        </div>
+                        <div id="paymentProcessing" class="payment-processing">
+                            <div class="spinner-border text-primary mb-3" role="status"></div>
+                            <h5>Procesando pago</h5>
+                            <p class="text-muted">Por favor espere...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0"><i class="fas fa-history me-2"></i>Historial Reciente</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead><tr><th>Fecha</th><th>Orden</th><th>Monto</th><th>Estado</th></tr></thead>
+                                <tbody id="paymentHistory"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Información Académica</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            <strong>Módulo de demostración:</strong> Este sistema simula el funcionamiento de una pasarela de pago.
+                            Los pagos no son reales y se utilizan datos de prueba.
+                        </p>
+                        <p class="small text-muted">
+                            <strong>Flujo real en producción:</strong>
+                            <ol class="small text-muted">
+                                <li>Cliente selecciona productos → Carrito → Checkout</li>
+                                <li>Sistema crea Payment Intent en Stripe</li>
+                                <li>Cliente ingresa datos de tarjeta (tokenizados)</li>
+                                <li>Stripe procesa el pago y devuelve resultado</li>
+                                <li>Sistema actualiza estado del pedido y stock</li>
+                            </ol>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resultModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Resultado del Pago</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="resultIcon" class="mb-3" style="font-size: 4rem;"></div>
+                    <h4 id="resultTitle"></h4>
+                    <p id="resultMessage"></p>
+                    <div id="resultDetails" class="mt-3 text-start"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="nuevoPago()">Nuevo Pago</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let token = null;
+        let usuario = null;
+        let selectedMethod = null;
+        let selectedPedido = null;
+
+        window.onload = function() {
+            verificarAutenticacion();
+            cargarMetodosPago();
+            cargarHistorialPagos();
+            cargarPedidosPendientes();
+        };
+
+        function verificarAutenticacion() {
+            token = localStorage.getItem("token");
+            const userData = localStorage.getItem("user");
+            
+            if (!token || !userData) {
+                window.location.href = "login.html";
+                return;
+            }
+            
+            usuario = JSON.parse(userData);
+            if (usuario.rol !== "Administrador" && usuario.rol !== "Vendedor") {
+                alert("Acceso denegado. Solo administradores y vendedores pueden procesar pagos.");
+                window.location.href = "dashboard.html";
+            }
+        }
+
+        function cargarMetodosPago() {
+            fetch("http://localhost:3000/api/payments/methods", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.methods) {
+                    const container = document.getElementById("paymentMethods");
+                    let html = "";
+                    
+                    data.methods.forEach(method => {
+                        html += `
+                            <div class="payment-method" onclick="selectPaymentMethod(${method.id})" id="method-${method.id}">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas ${method.icon}"></i>
+                                    <div>
+                                        <h6 class="mb-1">${method.name}</h6>
+                                        <p class="mb-0 text-muted small">${method.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    if (data.methods.length > 0) {
+                        selectPaymentMethod(data.methods[0].id);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error cargando métodos:", error);
+                document.getElementById("paymentMethods").innerHTML = 
+                    '<div class="alert alert-warning">Error al cargar métodos de pago</div>';
+            });
+        }
+
+        function cargarPedidosPendientes() {
+            fetch("http://localhost:3000/api/payments/pending-orders", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.orders) {
+                    const select = document.getElementById("pedidoSelect");
+                    data.orders.forEach(order => {
+                        const option = document.createElement("option");
+                        option.value = order.id;
+                        option.textContent = order.display;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error("Error cargando pedidos:", error));
+        }
+
+        function cargarDetallePedido() {
+            const select = document.getElementById("pedidoSelect");
+            const pedidoId = select.value;
+            
+            if (!pedidoId) {
+                document.getElementById("orderDetails").style.display = "none";
+                selectedPedido = null;
+                return;
+            }
+            
+            selectedPedido = pedidoId;
+            document.getElementById("orderDetails").style.display = "block";
+            document.getElementById("orderInfo").textContent = `Pedido: ORD-${pedidoId.padStart(5, '0')}`;
+            
+            // En un sistema real, aquí harías otra llamada para obtener el total
+            // Por ahora usamos un valor aleatorio
+            const total = (Math.random() * 200 + 20).toFixed(2);
+            document.getElementById("orderTotal").textContent = `Total: $${total}`;
+            document.getElementById("paymentAmount").value = total;
+        }
+
+        function selectPaymentMethod(methodId) {
+            document.querySelectorAll(".payment-method").forEach(el => {
+                el.classList.remove("selected");
+            });
+            
+            const methodElement = document.getElementById(`method-${methodId}`);
+            if (methodElement) {
+                methodElement.classList.add("selected");
+            }
+            
+            selectedMethod = methodId;
+            
+            const cardForm = document.getElementById("creditCardForm");
+            cardForm.style.display = methodId === 1 ? "block" : "none";
+        }
+
+        function procesarPago() {
+            const pedidoId = document.getElementById("pedidoSelect").value || 
+                            document.getElementById("pedidoIdManual").value;
+            const amount = parseFloat(document.getElementById("paymentAmount").value);
+            
+            if (!pedidoId) {
+                alert("Por favor seleccione o ingrese un ID de pedido");
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                alert("Ingrese un monto válido");
+                return;
+            }
+            
+            if (!selectedMethod) {
+                alert("Seleccione un método de pago");
+                return;
+            }
+            
+            // Mostrar procesando
+            document.getElementById("paymentStatus").style.display = "none";
+            document.getElementById("paymentProcessing").style.display = "block";
+            
+            // Crear intención de pago
+            fetch("http://localhost:3000/api/payments/create-payment-intent", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    pedido_id: pedidoId,
+                    description: `Pago pedido ORD-${pedidoId.padStart(5, '0')}`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Confirmar pago
+                    setTimeout(() => {
+                        confirmarPago(data.payment.id, pedidoId, amount);
+                    }, 1000);
+                } else {
+                    mostrarError("Error al crear pago: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                mostrarError("Error de conexión");
+            });
+        }
+
+        function confirmarPago(paymentId, pedidoId, amount) {
+            fetch(`http://localhost:3000/api/payments/confirm/${paymentId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    pedido_id: pedidoId,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("paymentProcessing").style.display = "none";
+                document.getElementById("paymentStatus").style.display = "block";
+                mostrarResultadoPago(data);
+                cargarHistorialPagos();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                mostrarError("Error al confirmar pago");
+            });
+        }
+
+        function mostrarResultadoPago(result) {
+            const modal = new bootstrap.Modal(document.getElementById('resultModal'));
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+            const details = document.getElementById('resultDetails');
+            
+            if (result.success) {
+                icon.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+                title.textContent = '¡Pago Exitoso!';
+                message.textContent = result.message;
+                message.className = 'text-success';
+                
+                details.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>Detalles del pago:</strong>
+                        <ul class="mb-0">
+                            <li>ID de transacción: ${result.payment.id}</li>
+                            <li>Pedido: ORD-${result.pedido_id?.padStart(5, '0') || 'N/A'}</li>
+                            <li>Estado: ${result.payment.status}</li>
+                            <li>Fecha: ${new Date().toLocaleString()}</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-info mt-2">
+                        <strong>En producción:</strong> El pedido se marcaría automáticamente como pagado 
+                        y se actualizaría el estado en el sistema.
+                    </div>
+                `;
+            } else {
+                icon.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+                title.textContent = 'Pago Rechazado';
+                message.textContent = result.message;
+                message.className = 'text-danger';
+                
+                details.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Posibles causas:</strong>
+                        <ul class="mb-0">
+                            <li>Tarjeta rechazada por el banco</li>
+                            <li>Fondos insuficientes</li>
+                            <li>Error en los datos de la tarjeta</li>
+                            <li>Tarjeta bloqueada o expirada</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-warning mt-2">
+                        <strong>Sugerencia:</strong> Intente con otro método de pago o verifique los datos ingresados.
+                    </div>
+                `;
+            }
+            
+            modal.show();
+        }
+
+        function cargarHistorialPagos() {
+            fetch("http://localhost:3000/api/payments/history", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.pagos) {
+                    const tbody = document.getElementById("paymentHistory");
+                    let html = "";
+                    
+                    data.pagos.forEach(pago => {
+                        let statusClass = pago.estado === "Aprobado" ? "success" : "danger";
+                        let statusText = pago.estado === "Aprobado" ? "Aprobado" : "Rechazado";
+                        
+                        html += `
+                            <tr>
+                                <td>${pago.fecha}</td>
+                                <td>${pago.orden_id}</td>
+                                <td>$${pago.monto.toFixed(2)}</td>
+                                <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tbody.innerHTML = html;
+                }
+            })
+            .catch(error => console.error("Error cargando historial:", error));
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById("paymentProcessing").style.display = "none";
+            document.getElementById("paymentStatus").style.display = "block";
+            document.getElementById("paymentStatus").innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${mensaje}
+                </div>
+            `;
+        }
+
+        function nuevoPago() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('resultModal'));
+            if (modal) modal.hide();
+            
+            // Resetear formulario
+            document.getElementById("pedidoSelect").value = "";
+            document.getElementById("pedidoIdManual").value = "";
+            document.getElementById("orderDetails").style.display = "none";
+            document.getElementById("paymentAmount").value = "";
+            
+            // Resetear estado
+            document.getElementById("paymentStatus").innerHTML = 
+                '<p class="text-muted">No hay pago en proceso</p>';
+            document.getElementById("paymentStatus").style.display = "block";
+            document.getElementById("paymentProcessing").style.display = "none";
+        }
+
+        function logout() {
+            if (confirm("¿Está seguro de cerrar sesión?")) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                window.location.href = "login.html";
+            }
+        }
+    </script>
+</body>
+</html>

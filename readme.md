@@ -81,7 +81,7 @@ Resumen general:
 - Registrar pago
 - Consultar métodos de pago
 - Relación con pedido
-
+esto se realizara por pasarelas de pago como stripe
 ### 3.7 Reportes (Básico)
 - Listado de ventas
 - Productos más vendidos
@@ -180,12 +180,13 @@ backend/
 │ ├─ auth.js
 ├─ routes/
 │ ├─ secure.js
-│ ├─ auth.js
+│ ├─ auth.js, categories, inventory, orders, products, reports, users,
 ├─ server.js
 ├─ db.js
+multiconfig
 frontend/
 ├─ login.html
-├─ dashboard.html
+├─ dashboard.html, inventorio, pedidos, productos, users,pagos,
 
 
 ---

@@ -5,7 +5,7 @@ console.log("=== CONEXIÓN MYSQL CON CONTRASEÑA FIJA ===");
 const db = mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "And_31856233",  
+    password: "perla1505",  
     database: "loopme",
     waitForConnections: true,
     connectionLimit: 10,
