@@ -87,4 +87,70 @@ router.get("/verify", (req, res) => {
     }
 });
 
+router.post("/login-cliente", async (req, res) => {
+    const { email, password } = req.body;
+
+    if(!email || !password){
+        return res.json({ success:false, message:"Complete los campos" });
+    }
+
+    const sql = `
+        SELECT id, nombre, apellido, email, password, activo 
+        FROM clientes 
+        WHERE email=?
+    `;
+
+    db.query(sql, [email], async (err, rows) => {
+        if(err) return res.json({ success:false, message:"Error en servidor" });
+
+        if(rows.length === 0)
+            return res.json({ success:false, message:"Cliente no encontrado" });
+
+        const cliente = rows[0];
+
+        if(cliente.activo === 0)
+            return res.json({ success:false, message:"Cliente inactivo" });
+
+        let isValid = false;
+
+        if(cliente.password.startsWith("$2b$")){
+            isValid = await bcrypt.compare(password, cliente.password);
+        } else {
+            isValid = password === cliente.password;
+
+            if(isValid){
+                const hash = await bcrypt.hash(password, 10);
+                db.query(
+                    "UPDATE clientes SET password=? WHERE id=?",
+                    [hash, cliente.id]
+                );
+            }
+        }
+
+        if(!isValid)
+            return res.json({ success:false, message:"Contraseña incorrecta" });
+
+        const token = jwt.sign({
+            id: cliente.id,
+            nombre: cliente.nombre,
+            apellido: cliente.apellido,
+            email: cliente.email,
+            tipo: "cliente"
+        }, SECRET, { expiresIn: "8h" });
+
+        res.json({
+            success: true,
+            message: "Login correcto",
+            token,
+            user: {
+                id: cliente.id,
+                nombre: cliente.nombre,
+                apellido: cliente.apellido,
+                email: cliente.email
+            }
+        });
+    });
+});
+
+
 module.exports = router;

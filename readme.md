@@ -1,3 +1,27 @@
+frontend/
+├── admin/                      # BACKOFFICE
+│   ├── login.html
+│   ├── dashboard.html
+│   ├── productos.html
+│   ├── inventario.html
+│   ├── pedidos.html
+│   ├── users.html
+│   ├── pagos.html
+│   
+│
+├── public/                     # E-COMMERCE
+│   ├── index.html
+│   ├── tienda.html
+│   ├── producto.html
+│   ├── carrito.html
+│   ├── checkout.html
+│   ├── pago-exitoso.html
+│   
+│
+├── css/
+│   ├── admin.css
+│   └── public.css
+
 # LoopMe - Sistema de Gestión e E-Commerce
 
 LoopMe es un sistema web compuesto por un módulo administrativo (Backoffice) para la gestión de inventario, ventas, usuarios y control interno de la tienda; y un módulo público tipo e-commerce para navegación de productos por parte de clientes.
