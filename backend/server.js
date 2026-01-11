@@ -35,7 +35,6 @@ app.use("/api/secure", authMiddleware, require("./routes/secure"));
 app.use("/api/admin/products", require("./routes/products"));
 
 app.use("/api/admin/users", authMiddleware, isAdmin, require("./routes/users"));
-app.use("/api/admin/inventory", authMiddleware, require("./routes/inventory")); 
 app.use("/api/admin/orders", authMiddleware, require("./routes/orders")); 
 app.use("/api/admin/reports", authMiddleware, isAdmin, require("./routes/reports"));
 

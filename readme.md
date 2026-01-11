@@ -55,11 +55,7 @@ Resumen general:
 - Eliminar producto
 - Categorías
 - Imagen opcional
-
-### 3.4 Inventario
-- Consultar stock
 - Modificar stock
-- Alertas automáticas de stock bajo
 
 ### 3.5 Pedidos / Ventas
 - Registrar venta

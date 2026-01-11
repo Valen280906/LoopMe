@@ -152,5 +152,68 @@ router.post("/login-cliente", async (req, res) => {
     });
 });
 
+// Agregar esta ruta después de la ruta login-cliente
+router.post("/registro-cliente", async (req, res) => {
+    const { nombre, apellido, email, telefono, direccion, password } = req.body;
+
+    // Validaciones
+    if (!nombre || !apellido || !email || !password) {
+        return res.json({ success: false, message: "Todos los campos obligatorios son requeridos" });
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.json({ success: false, message: "Correo electrónico no válido" });
+    }
+
+    // Validar contraseña
+    if (password.length < 8) {
+        return res.json({ success: false, message: "La contraseña debe tener al menos 8 caracteres" });
+    }
+
+    try {
+        // Verificar si el email ya existe
+        const checkSql = "SELECT id FROM clientes WHERE email = ?";
+        db.query(checkSql, [email], async (err, results) => {
+            if (err) {
+                console.error("Error verificando email:", err);
+                return res.json({ success: false, message: "Error en el servidor" });
+            }
+
+            if (results.length > 0) {
+                return res.json({ success: false, message: "Este correo ya está registrado" });
+            }
+
+            // Encriptar contraseña
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Insertar nuevo cliente
+            const insertSql = `
+                INSERT INTO clientes 
+                (nombre, apellido, email, telefono, direccion, password, activo) 
+                VALUES (?, ?, ?, ?, ?, ?, 1)
+            `;
+
+            db.query(insertSql, [nombre, apellido, email, telefono || null, direccion || null, hashedPassword], 
+                (err, result) => {
+                    if (err) {
+                        console.error("Error registrando cliente:", err);
+                        return res.json({ success: false, message: "Error al registrar el cliente" });
+                    }
+
+                    res.json({
+                        success: true,
+                        message: "Cliente registrado exitosamente. Ahora puedes iniciar sesión.",
+                        clienteId: result.insertId
+                    });
+                }
+            );
+        });
+    } catch (error) {
+        console.error("Error en registro-cliente:", error);
+        res.json({ success: false, message: "Error interno del servidor" });
+    }
+});
 
 module.exports = router;
