@@ -14,6 +14,8 @@ CREATE TABLE usuarios (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+net start MySQL95
+
 
 -- CLIENTES
 CREATE TABLE clientes (
@@ -169,3 +171,24 @@ END$$
 
 DELIMITER ;
 
+INSERT INTO usuarios(nombre, apellido, email, password, rol, activo)
+VALUES ('Admin', 'LoopMe', 'admin@loopme.com', '1234', 'Administrador', 1);
+
+ALTER TABLE clientes 
+ADD password VARCHAR(255) NOT NULL AFTER email;
+ALTER TABLE clientes
+ADD activo BOOLEAN DEFAULT TRUE;
+ALTER TABLE clientes
+ADD UNIQUE (email);
+
+INSERT INTO clientes(nombre, apellido, email, password, activo)
+VALUES ('Juan', 'Perez', 'cliente@loopme.com', '1234', 1);
+
+SELECT * FROM clientes WHERE email='cliente@loopme.com';
+
+UPDATE usuarios 
+SET rol = 'Administrador' 
+WHERE rol IN ('Vendedor', 'Inventario');
+ALTER TABLE usuarios 
+MODIFY COLUMN rol ENUM('Administrador') NOT NULL DEFAULT 'Administrador';
+DELETE FROM usuarios WHERE rol NOT IN ('Administrador');

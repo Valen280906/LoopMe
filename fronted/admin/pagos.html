@@ -245,8 +245,8 @@
             }
             
             usuario = JSON.parse(userData);
-            if (usuario.rol !== "Administrador" && usuario.rol !== "Vendedor") {
-                alert("Acceso denegado. Solo administradores y vendedores pueden procesar pagos.");
+            if (usuario.rol !== "Administrador") {
+                alert("Acceso denegado. Solo administradores pueden procesar pagos.");
                 window.location.href = "dashboard.html";
             }
         }

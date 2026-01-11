@@ -2,10 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const db = require("./db");
 const authMiddleware = require("./middleware/auth");
-const isAdmin = require("./middleware/isAdmin");  // ← AÑADE ESTA LÍNEA
-const isVendedor = require("./middleware/isVendedor");  // ← AÑADE ESTA LÍNEA
-const isInventario = require("./middleware/isInventario");  // ← AÑADE ESTA LÍNEA
-
+const isAdmin = require("./middleware/isAdmin");  
 const app = express();
 
 // Configuración
@@ -26,16 +23,17 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/products"));
 app.use("/api/categories", require("./routes/categories"));
 
-// Rutas protegidas
+// Rutas protegidas (solo autenticación)
 app.use("/api/secure", authMiddleware, require("./routes/secure"));
 
-// Rutas ADMIN protegidas CON PERMISOS ESPECÍFICOS
+// Rutas ADMIN protegidas
 app.use("/api/admin/products", authMiddleware, require("./routes/products"));
 app.use("/api/admin/users", authMiddleware, isAdmin, require("./routes/users"));
-app.use("/api/admin/inventory", authMiddleware, isInventario, require("./routes/inventory"));
-app.use("/api/admin/orders", authMiddleware, isVendedor, require("./routes/orders"));
+app.use("/api/admin/inventory", authMiddleware, require("./routes/inventory")); 
+app.use("/api/admin/orders", authMiddleware, require("./routes/orders")); 
 app.use("/api/admin/reports", authMiddleware, isAdmin, require("./routes/reports"));
-app.use("/api/payments", authMiddleware, require("./routes/payments"));
+
+
 // Manejo de errores
 app.use((err, req, res, next) => {
     console.error(err.stack);

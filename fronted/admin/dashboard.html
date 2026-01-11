@@ -253,11 +253,9 @@
             
             // Mensaje personalizado según rol
             const mensajes = {
-                'Administrador': 'Tienes acceso completo al sistema.',
-                'Vendedor': 'Puedes registrar ventas y consultar productos.',
-                'Inventario': 'Puedes gestionar el inventario y stock.'
+                'Administrador': 'Tienes acceso completo al sistema.'
             };
-            
+
             document.getElementById("welcomeMessage").textContent = 
                 `Rol: ${usuario.rol}. ${mensajes[usuario.rol] || ''}`;
             

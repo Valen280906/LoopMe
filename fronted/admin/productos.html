@@ -326,7 +326,7 @@
         function mostrarProductos(listaProductos) {
             const tbody = document.getElementById("tablaProductos");
             // Permisos: quién puede editar o eliminar
-            const puedeEditar = usuario.rol === 'Administrador' || usuario.rol === 'Inventario';
+            const puedeEditar = usuario.rol === 'Administrador';
             const puedeEliminar = usuario.rol === 'Administrador';
 
             if (listaProductos.length === 0) {
