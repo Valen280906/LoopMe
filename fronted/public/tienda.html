@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda LoopMe - Moda y Estilo</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos globales LoopMe -->
+    <link rel="stylesheet" href="css/public.css">
+    <style>
+        /* Estilos adicionales específicos para tienda.html */
+        .placeholder-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .placeholder-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .banner-content {
+            text-align: center;
+            z-index: 1;
+            padding: 0 20px;
+        }
+        
+        .banner-content h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .banner-content p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 600px;
+        }
+        
+        .loading-products {
+            text-align: center;
+            padding: 60px 0;
+        }
+        
+        .spinner-loopme {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(118, 75, 162, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Filtros */
+        .filters-container {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 40px;
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .form-select-loopme {
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            padding: 10px 15px;
+            transition: var(--transition);
+        }
+        
+        .form-select-loopme:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(118, 75, 162, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-loopme">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-loopme" href="index.html">
+                <i class="fas fa-tshirt"></i> LoopMe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLoopMe">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLoopMe">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="index.html">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme active" href="tienda.html">
+                            <i class="fas fa-store"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link nav-link-loopme dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-list"></i> Categorías
+                        </a>
+                        <ul class="dropdown-menu" id="categoriesDropdown">
+                            <!-- Categorías se cargarán dinámicamente -->
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="carrito.html">
+                            <i class="fas fa-shopping-cart"></i> Carrito
+                            <span class="badge bg-light text-primary ms-1" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="pedidos.html">
+                            <i class="fas fa-clipboard-list"></i> Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="#" id="loginLink">
+                            <i class="fas fa-user"></i> Mi Cuenta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Banner de tienda -->
+    <div class="placeholder-banner">
+        <div class="banner-content">
+            <h1>DESCUBRE TU ESTILO</h1>
+            <p>Colección exclusiva de moda para hombre y mujer. Calidad, diseño y confort en cada prenda.</p>
+            <a href="#productos" class="btn btn-loopme btn-lg">
+                <i class="fas fa-arrow-down me-2"></i>Ver Colección
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <!-- Filtros -->
+        <div class="filters-container">
+            <div class="row align-items-center">
+                <div class="col-md-3">
+                    <div class="filter-title">
+                        <i class="fas fa-filter me-2"></i>Filtrar Productos
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-loopme" id="filterCategory">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-loopme" id="filterPrice">
+                        <option value="">Ordenar por precio</option>
+                        <option value="asc">Menor a Mayor</option>
+                        <option value="desc">Mayor a Menor</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchProduct" placeholder="Buscar producto...">
+                        <button class="btn btn-loopme" type="button" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Título de sección -->
+        <div class="section-title" id="productos">
+            <h2>NUESTRA COLECCIÓN</h2>
+            <p>Descubre las mejores prendas seleccionadas para ti</p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingProducts" class="loading-products">
+            <div class="spinner-loopme"></div>
+            <p>Cargando productos...</p>
+        </div>
+
+        <!-- Productos (se cargarán dinámicamente) -->
+        <div class="row" id="productsContainer" style="display: none;">
+            <!-- Los productos se cargarán aquí -->
+        </div>
+
+        <!-- Mensaje cuando no hay productos -->
+        <div id="noProducts" class="text-center py-5" style="display: none;">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>No se encontraron productos</h4>
+            <p class="text-muted">Intenta con otros filtros de búsqueda</p>
+            <button class="btn btn-loopme-outline" onclick="resetFilters()">
+                <i class="fas fa-redo me-2"></i>Restablecer filtros
+            </button>
+        </div>
+
+        <!-- Paginación -->
+        <nav aria-label="Page navigation" id="paginationContainer" style="display: none;">
+            <ul class="pagination justify-content-center mt-5">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Anterior</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Footer -->
+    <footer class="loopme-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Comprar</h5>
+                        <ul>
+                            <li><a href="#">Mujer</a></li>
+                            <li><a href="#">Hombre</a></li>
+                            <li><a href="#">Niños</a></li>
+                            <li><a href="#">Ofertas</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#">Políticas</a></li>
+                            <li><a href="#">Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let allProducts = [];
+        let allCategories = [];
+        let cartCount = 0;
+        let clienteAutenticado = false;
+
+        // Cargar productos al inicio
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarAutenticacion();
+            cargarCategorias();
+            cargarProductosAleatorios();
+            actualizarContadorCarrito();
+        });
+
+        // Verificar autenticación
+        function verificarAutenticacion() {
+            const token = localStorage.getItem("cliente_token");
+            const clienteInfo = localStorage.getItem("cliente_info");
+            const loginLink = document.getElementById("loginLink");
+            
+            if (token && clienteInfo) {
+                try {
+                    const cliente = JSON.parse(clienteInfo);
+                    clienteAutenticado = true;
+                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${cliente.nombre}`;
+                    loginLink.href = "javascript:void(0)";
+                    
+                    // Agregar opción de cerrar sesión
+                    loginLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        mostrarMenuUsuario();
+                    });
+                } catch(e) {
+                    console.error("Error al parsear cliente info:", e);
+                    clienteAutenticado = false;
+                    loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
+                    loginLink.href = "login-cliente.html";
+                }
+            } else {
+                loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
+                loginLink.href = "login-cliente.html";
+            }
+        }
+
+        // Menú desplegable para usuario autenticado
+        function mostrarMenuUsuario() {
+            if (!clienteAutenticado) return;
+            
+            const cliente = JSON.parse(localStorage.getItem("cliente_info"));
+            
+            // Crear menú desplegable
+            const menuHTML = `
+                <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
+                    <div class="dropdown-header">
+                        <strong>${cliente.nombre}</strong>
+                        <p class="mb-0 text-muted small">${cliente.email}</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="pedidos.html">
+                        <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-heart me-2"></i>Favoritos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-user-edit me-2"></i>Mi Perfil
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                </div>
+            `;
+            
+            // Mostrar menú
+            const loginLink = document.getElementById("loginLink");
+            loginLink.parentElement.classList.add("dropdown");
+            
+            // Crear elemento dropdown si no existe
+            let dropdownMenu = loginLink.nextElementSibling;
+            if (!dropdownMenu || !dropdownMenu.classList.contains("dropdown-menu")) {
+                dropdownMenu = document.createElement("div");
+                dropdownMenu.className = "dropdown-menu";
+                loginLink.parentElement.appendChild(dropdownMenu);
+            }
+            
+            dropdownMenu.innerHTML = menuHTML;
+            dropdownMenu.classList.add("show");
+            
+            // Cerrar al hacer clic fuera
+            document.addEventListener('click', function closeMenu(e) {
+                if (!loginLink.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove("show");
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+
+        // Cerrar sesión de cliente
+        function logoutCliente() {
+            if (confirm("¿Estás seguro de cerrar sesión?")) {
+                localStorage.removeItem("cliente_token");
+                localStorage.removeItem("cliente_info");
+                window.location.href = "tienda.html";
+            }
+        }
+
+        // Cargar categorías
+        function cargarCategorias() {
+            fetch("http://localhost:3000/api/categories")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.categorias) {
+                        allCategories = data.categorias;
+                        
+                        // Llenar dropdown de navegación
+                        const categoriesDropdown = document.getElementById("categoriesDropdown");
+                        let dropdownHTML = '';
+                        allCategories.forEach(categoria => {
+                            dropdownHTML += `
+                                <li><a class="dropdown-item" href="#" onclick="filtrarPorCategoria(${categoria.id})">
+                                    ${categoria.nombre}
+                                </a></li>`;
+                        });
+                        categoriesDropdown.innerHTML = dropdownHTML;
+                        
+                        // Llenar filtro de categorías
+                        const filterCategory = document.getElementById("filterCategory");
+                        let filterHTML = '<option value="">Todas las categorías</option>';
+                        allCategories.forEach(categoria => {
+                            filterHTML += `<option value="${categoria.id}">${categoria.nombre}</option>`;
+                        });
+                        filterCategory.innerHTML = filterHTML;
+                    }
+                })
+                .catch(error => console.error("Error cargando categorías:", error));
+        }
+
+        // Cargar productos aleatorios
+        function cargarProductosAleatorios() {
+            fetch("http://localhost:3000/api/products")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.productos) {
+                        allProducts = data.productos;
+                        
+                        // Ocultar loading
+                        document.getElementById("loadingProducts").style.display = "none";
+                        
+                        // Mezclar productos aleatoriamente
+                        const productosAleatorios = [...allProducts].sort(() => Math.random() - 0.5);
+                        
+                        // Mostrar productos
+                        mostrarProductos(productosAleatorios);
+                        
+                        // Mostrar contenedor
+                        document.getElementById("productsContainer").style.display = "flex";
+                    } else {
+                        mostrarSinProductos();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error cargando productos:", error);
+                    mostrarSinProductos();
+                });
+        }
+
+        // Mostrar productos en la grilla
+        function mostrarProductos(productos) {
+            const container = document.getElementById("productsContainer");
+            
+            if (productos.length === 0) {
+                mostrarSinProductos();
+                return;
+            }
+            
+            // Mostrar paginación si hay más de 12 productos
+            const showPagination = productos.length > 12;
+            document.getElementById("paginationContainer").style.display = showPagination ? "block" : "none";
+            
+            // Limitar a 12 productos para la primera página
+            const productosAMostrar = productos.slice(0, 12);
+            
+            let html = '';
+            
+            productosAMostrar.forEach(producto => {
+                // Determinar estado del stock
+                let stockClass = "product-stock";
+                let stockText = `${producto.stock_actual} disponibles`;
+                
+                if (producto.stock_actual <= 0) {
+                    stockClass += " out";
+                    stockText = "Agotado";
+                } else if (producto.stock_bajo) {
+                    stockClass += " low";
+                    stockText = `Solo ${producto.stock_actual} disponibles`;
+                }
+                
+                // URL de imagen
+                let imagenUrl = producto.imagen_url;
+                if (imagenUrl && !imagenUrl.startsWith('http')) {
+                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                }
+                
+                // Verificar si está en el carrito
+                const carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
+                const enCarrito = carrito.some(item => item.id === producto.id);
+                
+                html += `
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card product-card">
+                            <div class="product-img-container">
+                                ${producto.stock_bajo ? '<div class="product-badge">Últimas unidades</div>' : ''}
+                                ${producto.stock_actual <= 0 ? '<div class="product-badge bg-danger">Agotado</div>' : ''}
+                                <img src="${imagenUrl || 'https://via.placeholder.com/300x300/eee/999?text=Sin+imagen'}" 
+                                     class="product-img" 
+                                     alt="${producto.nombre}"
+                                     onerror="this.src='https://via.placeholder.com/300x300/eee/999?text=Sin+imagen'">
+                            </div>
+                            <div class="product-info">
+                                <a href="producto.html?id=${producto.id}" class="product-title">
+                                    ${producto.nombre}
+                                </a>
+                                <span class="product-category">${producto.categoria || 'Sin categoría'}</span>
+                                
+                                <div class="product-meta">
+                                    <span class="product-color">${producto.color || 'Varios colores'}</span>
+                                    <span class="${stockClass}">${stockText}</span>
+                                </div>
+                                
+                                <div class="product-price">
+                                    $${parseFloat(producto.precio).toFixed(2)}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-loopme btn-sm" 
+                                            onclick="verDetalleProducto(${producto.id})"
+                                            ${producto.stock_actual <= 0 ? 'disabled' : ''}>
+                                        <i class="fas fa-eye me-1"></i> Ver
+                                    </button>
+                                    <button class="btn ${enCarrito ? 'btn-success' : 'btn-loopme-outline'} btn-sm" 
+                                            onclick="agregarAlCarrito(${producto.id})"
+                                            id="btnCart${producto.id}"
+                                            ${producto.stock_actual <= 0 ? 'disabled' : ''}>
+                                        ${enCarrito ? 
+                                            '<i class="fas fa-check me-1"></i> En carrito' : 
+                                            '<i class="fas fa-cart-plus me-1"></i> Agregar'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById("noProducts").style.display = "none";
+        }
+
+        // Ver detalle de producto
+        function verDetalleProducto(id) {
+            window.location.href = `producto.html?id=${id}`;
+        }
+
+        // Agregar al carrito
+        function agregarAlCarrito(productoId) {
+            const producto = allProducts.find(p => p.id === productoId);
+            
+            if (!producto) {
+                alert("Producto no encontrado");
+                return;
+            }
+            
+            if (producto.stock_actual <= 0) {
+                alert("Este producto está agotado");
+                return;
+            }
+            
+            // Obtener carrito actual
+            let carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
+            
+            // Verificar si ya está en el carrito
+            const index = carrito.findIndex(item => item.id === productoId);
+            
+            if (index >= 0) {
+                // Si ya está, aumentar cantidad
+                carrito[index].cantidad += 1;
+            } else {
+                // Si no está, agregarlo
+                carrito.push({
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    imagen: producto.imagen_url,
+                    categoria: producto.categoria,
+                    cantidad: 1,
+                    stock: producto.stock_actual
+                });
+            }
+            
+            // Guardar en localStorage
+            localStorage.setItem("carrito", JSON.stringify(carrito));
+            
+            // Actualizar botón
+            const btnCart = document.getElementById(`btnCart${productoId}`);
+            btnCart.className = "btn btn-success btn-sm";
+            btnCart.innerHTML = '<i class="fas fa-check me-1"></i> En carrito';
+            
+            // Actualizar contador
+            actualizarContadorCarrito();
+            
+            // Mostrar notificación
+            mostrarNotificacion(`"${producto.nombre}" agregado al carrito`);
+        }
+
+        // Mostrar notificación
+        function mostrarNotificacion(mensaje) {
+            // Crear notificación
+            const notificacion = document.createElement("div");
+            notificacion.className = "alert alert-success position-fixed";
+            notificacion.style.cssText = `
+                bottom: 20px;
+                right: 20px;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                animation: slideIn 0.3s ease;
+            `;
+            notificacion.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i> ${mensaje}
+            `;
+            
+            document.body.appendChild(notificacion);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notificacion.style.animation = "slideOut 0.3s ease";
+                setTimeout(() => {
+                    if (notificacion.parentNode) {
+                        notificacion.parentNode.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 3000);
+            
+            // Agregar estilos de animación si no existen
+            if (!document.querySelector('#notification-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'notification-styles';
+                styles.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+        }
+
+        // Actualizar contador del carrito
+        function actualizarContadorCarrito() {
+            const carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
+            cartCount = carrito.reduce((total, item) => total + item.cantidad, 0);
+            document.getElementById("cartCount").textContent = cartCount;
+        }
+
+        // Filtrar por categoría
+        function filtrarPorCategoria(categoriaId) {
+            const filterSelect = document.getElementById("filterCategory");
+            filterSelect.value = categoriaId;
+            aplicarFiltros();
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const categoriaId = document.getElementById("filterCategory").value;
+            const ordenPrecio = document.getElementById("filterPrice").value;
+            const busqueda = document.getElementById("searchProduct").value.toLowerCase();
+            
+            let productosFiltrados = [...allProducts];
+            
+            // Filtrar por categoría
+            if (categoriaId) {
+                productosFiltrados = productosFiltrados.filter(p => p.categoria_id == categoriaId);
+            }
+            
+            // Filtrar por búsqueda
+            if (busqueda) {
+                productosFiltrados = productosFiltrados.filter(p => 
+                    p.nombre.toLowerCase().includes(busqueda) || 
+                    (p.descripcion && p.descripcion.toLowerCase().includes(busqueda))
+                );
+            }
+            
+            // Ordenar por precio
+            if (ordenPrecio === "asc") {
+                productosFiltrados.sort((a, b) => a.precio - b.precio);
+            } else if (ordenPrecio === "desc") {
+                productosFiltrados.sort((a, b) => b.precio - a.precio);
+            } else {
+                // Orden aleatorio por defecto
+                productosFiltrados.sort(() => Math.random() - 0.5);
+            }
+            
+            mostrarProductos(productosFiltrados);
+        }
+
+        // Restablecer filtros
+        function resetFilters() {
+            document.getElementById("filterCategory").value = "";
+            document.getElementById("filterPrice").value = "";
+            document.getElementById("searchProduct").value = "";
+            cargarProductosAleatorios();
+        }
+
+        // Mostrar mensaje cuando no hay productos
+        function mostrarSinProductos() {
+            document.getElementById("loadingProducts").style.display = "none";
+            document.getElementById("productsContainer").style.display = "none";
+            document.getElementById("paginationContainer").style.display = "none";
+            document.getElementById("noProducts").style.display = "block";
+        }
+
+        // Event listeners para filtros
+        document.getElementById("filterCategory").addEventListener("change", aplicarFiltros);
+        document.getElementById("filterPrice").addEventListener("change", aplicarFiltros);
+        document.getElementById("searchProduct").addEventListener("input", aplicarFiltros);
+        document.getElementById("searchButton").addEventListener("click", aplicarFiltros);
+        
+        // Buscar con Enter
+        document.getElementById("searchProduct").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                aplicarFiltros();
+            }
+        });
+    </script>
+</body>
+</html>
