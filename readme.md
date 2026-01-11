@@ -1,26 +1,4 @@
-frontend/
-├── admin/                      # BACKOFFICE
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── productos.html
-│   ├── inventario.html
-│   ├── pedidos.html
-│   ├── users.html
-│   ├── pagos.html
-│   
-│
-├── public/                     # E-COMMERCE
-│   ├── index.html
-│   ├── tienda.html
-│   ├── producto.html
-│   ├── carrito.html
-│   ├── checkout.html
-│   ├── pago-exitoso.html
-│   
-│
-├── css/
-│   ├── admin.css
-│   └── public.css
+
 
 # LoopMe - Sistema de Gestión e E-Commerce
 
@@ -53,18 +31,6 @@ El sistema está dividido en dos áreas principales:
 - Gestión de inventario
 - Acceso a reportes y ventas
 
-## Vendedor
-- Registro de ventas
-- Gestión de pedidos
-- Consulta de stock
-- No puede eliminar usuarios
-- No puede modificar estructura del sistema
-
-## Encargado de Inventario
-- Administración del inventario
-- Actualización de stock
-- Atención de alertas
-- No puede gestionar pagos ni usuarios
 
 ---
 
@@ -110,7 +76,7 @@ esto se realizara por pasarelas de pago como stripe
 - Listado de ventas
 - Productos más vendidos
 
-### 3.8 Gestión de Usuarios (Solo Administrador)
+### 3.8 Gestión de Usuarios 
 - Crear usuarios
 - Asignar roles
 - Activar / desactivar usuario
@@ -198,20 +164,6 @@ Este esquema permite proteger rutas, validar roles y mantener sesiones sin almac
 ---
 
 # 7. Estructura del Proyecto
-
-backend/
-├─ middleware/
-│ ├─ auth.js
-├─ routes/
-│ ├─ secure.js
-│ ├─ auth.js, categories, inventory, orders, products, reports, users,
-├─ server.js
-├─ db.js
-multiconfig
-frontend/
-├─ login.html
-├─ dashboard.html, inventorio, pedidos, productos, users,pagos,
-
 
 ---
 

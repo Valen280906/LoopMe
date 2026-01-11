@@ -9,7 +9,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body>
     <!-- Navbar -->
@@ -149,7 +149,16 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Talla</label>
-                                            <input type="text" id="talla" class="form-control">
+                                            <select id="talla" class="form-control">
+                                                <option value="">Seleccionar talla</option>
+                                                <option value="XS">XS</option>
+                                                <option value="S">S</option>
+                                                <option value="M">M</option>
+                                                <option value="L">L</option>
+                                                <option value="XL">XL</option>
+                                                <option value="XXL">XXL</option>
+                                                <option value="Única">Única</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -198,6 +207,80 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" onclick="guardarProducto()">
                         <i class="fas fa-save"></i> Guardar Producto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal para ver detalles del producto -->
+    <div class="modal fade" id="modalDetalles" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detallesTitulo">Detalles del Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="detallesImagen" class="text-center mb-3">
+                                <!-- Imagen se cargará aquí -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>ID:</th>
+                                    <td id="detallesId"></td>
+                                </tr>
+                                <tr>
+                                    <th>Nombre:</th>
+                                    <td id="detallesNombre"></td>
+                                </tr>
+                                <tr>
+                                    <th>Descripción:</th>
+                                    <td id="detallesDescripcion"></td>
+                                </tr>
+                                <tr>
+                                    <th>Categoría:</th>
+                                    <td id="detallesCategoria"></td>
+                                </tr>
+                                <tr>
+                                    <th>Precio:</th>
+                                    <td id="detallesPrecio"></td>
+                                </tr>
+                                <tr>
+                                    <th>Talla:</th>
+                                    <td id="detallesTalla"></td>
+                                </tr>
+                                <tr>
+                                    <th>Color:</th>
+                                    <td id="detallesColor"></td>
+                                </tr>
+                                <tr>
+                                    <th>Stock Actual:</th>
+                                    <td id="detallesStockActual"></td>
+                                </tr>
+                                <tr>
+                                    <th>Stock Mínimo:</th>
+                                    <td id="detallesStockMinimo"></td>
+                                </tr>
+                                <tr>
+                                    <th>Estado:</th>
+                                    <td id="detallesEstado"></td>
+                                </tr>
+                                <tr>
+                                    <th>Fecha Creación:</th>
+                                    <td id="detallesFecha"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditarDesdeDetalles" style="display: none;">
+                        <i class="fas fa-edit"></i> Editar Producto
                     </button>
                 </div>
             </div>
@@ -325,7 +408,6 @@
         // Mostrar productos en la tabla
         function mostrarProductos(listaProductos) {
             const tbody = document.getElementById("tablaProductos");
-            // Permisos: quién puede editar o eliminar
             const puedeEditar = usuario.rol === 'Administrador';
             const puedeEliminar = usuario.rol === 'Administrador';
 
@@ -343,8 +425,14 @@
                         '<span class="badge bg-success">Disponible</span>' : 
                         '<span class="badge bg-danger">Agotado</span>');
                 
-                const imagen = producto.imagen_url ? 
-                    `<img src="${producto.imagen_url}" alt="${producto.nombre}" class="img-thumbnail" style="width: 50px; height: 50px;">` :
+                // Construir URL completa para la imagen
+                let imagenUrl = producto.imagen_url;
+                if (imagenUrl && !imagenUrl.startsWith('http')) {
+                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                }
+                
+                const imagen = imagenUrl ? 
+                    `<img src="${imagenUrl}" alt="${producto.nombre}" class="img-thumbnail" style="width: 50px; height: 50px;">` :
                     `<div class="img-thumbnail d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: #eee;">
                         <i class="fas fa-tshirt text-muted"></i>
                     </div>`;
@@ -413,40 +501,60 @@
         // Guardar producto (crear o actualizar)
         function guardarProducto() {
             const productoId = document.getElementById('productoId').value;
-            const datos = {
-                nombre: document.getElementById('nombre').value,
-                descripcion: document.getElementById('descripcion').value,
-                precio: parseFloat(document.getElementById('precio').value),
-                talla: document.getElementById('talla').value,
-                color: document.getElementById('color').value,
-                categoria_id: document.getElementById('categoria_id').value || null,
-                imagen_url: document.getElementById('imagen_url').value || null,
-                stock_actual: parseInt(document.getElementById('stock_actual').value) || 0,
-                stock_minimo: parseInt(document.getElementById('stock_minimo').value) || 5
-            };
+            
+            // Usar FormData para enviar archivos
+            const formData = new FormData();
+            
+            // Agregar todos los campos del formulario
+            formData.append('nombre', document.getElementById('nombre').value);
+            formData.append('descripcion', document.getElementById('descripcion').value);
+            formData.append('precio', document.getElementById('precio').value);
+            formData.append('talla', document.getElementById('talla').value);
+            formData.append('color', document.getElementById('color').value);
+            formData.append('categoria_id', document.getElementById('categoria_id').value || '');
+            formData.append('stock_actual', document.getElementById('stock_actual').value);
+            formData.append('stock_minimo', document.getElementById('stock_minimo').value);
+            
+            // Agregar imagen si existe
+            const imagenFile = document.getElementById('imagen_file').files[0];
+            if (imagenFile) {
+                formData.append('imagen', imagenFile);
+            } else if (document.getElementById('imagen_url').value) {
+                formData.append('imagen_url', document.getElementById('imagen_url').value);
+            }
             
             // Validaciones básicas
-            if (!datos.nombre || !datos.precio) {
+            if (!formData.get('nombre') || !formData.get('precio')) {
                 alert('Nombre y precio son obligatorios');
                 return;
             }
             
+            // Usar la ruta correcta: /api/admin/products
             const url = productoId ? 
                 `http://localhost:3000/api/admin/products/${productoId}` : 
                 'http://localhost:3000/api/admin/products';
             
             const metodo = productoId ? 'PUT' : 'POST';
             
+            console.log('Enviando datos a:', url, 'método:', metodo);
+            
             fetch(url, {
                 method: metodo,
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
+                    // NO incluir 'Content-Type': fetch lo hará automáticamente con FormData
                 },
-                body: JSON.stringify(datos)
+                body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Respuesta recibida, status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Datos recibidos:', data);
                 if (data.success) {
                     alert(data.message);
                     cargarProductos();
@@ -456,11 +564,12 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error al guardar el producto');
+                console.error('Error completo:', error);
+                alert('Error al guardar el producto: ' + error.message);
             });
         }
 
+        // Editar producto
         // Editar producto
         function editarProducto(id) {
             if (usuario.rol !== 'Administrador') {
@@ -484,7 +593,23 @@
                         document.getElementById('categoria_id').value = producto.categoria_id || '';
                         document.getElementById('stock_actual').value = producto.stock_actual;
                         document.getElementById('stock_minimo').value = producto.stock_minimo;
-                        document.getElementById('imagen_url').value = producto.imagen_url || '';
+                        
+                        // Manejar la imagen - NO convertir a URL completa aquí
+                        // El backend manejará la conversión
+                        let imagenUrl = producto.imagen_url || '';
+                        document.getElementById('imagen_url').value = imagenUrl;
+                        
+                        // Mostrar preview si hay imagen
+                        const preview = document.getElementById('imagen_preview');
+                        if (imagenUrl) {
+                            // Si es una ruta relativa, agregar la URL base para mostrar
+                            if (imagenUrl && !imagenUrl.startsWith('http')) {
+                                imagenUrl = 'http://localhost:3000' + imagenUrl;
+                            }
+                            preview.innerHTML = `<img src="${imagenUrl}" class="img-thumbnail" style="max-width: 200px;">`;
+                        } else {
+                            preview.innerHTML = '';
+                        }
                         
                         const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
                         modal.show();
@@ -492,7 +617,6 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
-
         // Eliminar producto (desactivar)
         function eliminarProducto(id) {
             if (usuario.rol !== 'Administrador') {
@@ -504,6 +628,7 @@
                 return;
             }
             
+            // Usar la ruta correcta: /api/admin/products/id
             fetch(`http://localhost:3000/api/admin/products/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -527,8 +652,89 @@
 
         // Ver detalles del producto
         function verDetalles(id) {
-            // Podrías abrir un modal con más detalles
-            alert(`Ver detalles del producto ID: ${id}\nEsta función se implementará más adelante.`);
+            fetch(`http://localhost:3000/api/products/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.producto) {
+                        const producto = data.producto;
+                        
+                        // Construir URL completa para la imagen
+                        let imagenUrl = producto.imagen_url;
+                        if (imagenUrl && !imagenUrl.startsWith('http')) {
+                            imagenUrl = 'http://localhost:3000' + imagenUrl;
+                        }
+                        
+                        // Llenar el modal con los datos
+                        document.getElementById('detallesTitulo').textContent = `Detalles: ${producto.nombre}`;
+                        document.getElementById('detallesId').textContent = producto.id;
+                        document.getElementById('detallesNombre').textContent = producto.nombre;
+                        document.getElementById('detallesDescripcion').textContent = producto.descripcion || 'Sin descripción';
+                        document.getElementById('detallesCategoria').textContent = producto.categoria || 'Sin categoría';
+                        document.getElementById('detallesPrecio').textContent = `$${parseFloat(producto.precio).toFixed(2)}`;
+                        document.getElementById('detallesTalla').textContent = producto.talla || 'No especificada';
+                        document.getElementById('detallesColor').textContent = producto.color || 'No especificado';
+                        document.getElementById('detallesStockActual').textContent = producto.stock_actual;
+                        document.getElementById('detallesStockMinimo').textContent = producto.stock_minimo;
+                        
+                        // Estado del stock
+                        let estado = '';
+                        if (producto.stock_bajo) {
+                            estado = '<span class="badge bg-warning">Stock Bajo</span>';
+                        } else if (producto.stock_actual > 0) {
+                            estado = '<span class="badge bg-success">Disponible</span>';
+                        } else {
+                            estado = '<span class="badge bg-danger">Agotado</span>';
+                        }
+                        document.getElementById('detallesEstado').innerHTML = estado;
+                        
+                        // Fecha (si existe el campo)
+                        if (producto.created_at || producto.fecha_creacion) {
+                            const fecha = producto.created_at || producto.fecha_creacion;
+                            document.getElementById('detallesFecha').textContent = new Date(fecha).toLocaleDateString();
+                        } else {
+                            document.getElementById('detallesFecha').textContent = 'No disponible';
+                        }
+                        
+                        // Imagen
+                        const imagenContainer = document.getElementById('detallesImagen');
+                        if (imagenUrl) {
+                            imagenContainer.innerHTML = `
+                                <img src="${imagenUrl}" alt="${producto.nombre}" 
+                                    class="img-fluid rounded" style="max-height: 300px;">
+                            `;
+                        } else {
+                            imagenContainer.innerHTML = `
+                                <div class="text-muted d-flex flex-column align-items-center justify-content-center" 
+                                    style="height: 200px; background: #f8f9fa; border-radius: 8px;">
+                                    <i class="fas fa-tshirt fa-3x mb-2"></i>
+                                    <span>Sin imagen</span>
+                                </div>
+                            `;
+                        }
+                        
+                        // Configurar botón de editar (solo para administradores)
+                        const btnEditar = document.getElementById('btnEditarDesdeDetalles');
+                        if (usuario.rol === 'Administrador') {
+                            btnEditar.style.display = 'block';
+                            btnEditar.onclick = function() {
+                                bootstrap.Modal.getInstance(document.getElementById('modalDetalles')).hide();
+                                setTimeout(() => editarProducto(id), 300);
+                            };
+                        } else {
+                            btnEditar.style.display = 'none';
+                        }
+                        
+                        // Mostrar el modal
+                        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+                        modal.show();
+                    } else {
+                        alert('Error al cargar los detalles del producto');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar los detalles del producto');
+                });
         }
 
         // Filtrar productos

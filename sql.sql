@@ -192,3 +192,22 @@ WHERE rol IN ('Vendedor', 'Inventario');
 ALTER TABLE usuarios 
 MODIFY COLUMN rol ENUM('Administrador') NOT NULL DEFAULT 'Administrador';
 DELETE FROM usuarios WHERE rol NOT IN ('Administrador');
+
+SELECT id, nombre, email, rol FROM usuarios;
+
+INSERT INTO categorias (nombre, descripcion) VALUES
+('Camisetas', 'Camisetas básicas, estampadas y de diferentes estilos'),
+('Pantalones', 'Jeans, chinos, leggings y otros tipos de pantalones'),
+('Vestidos', 'Vestidos casuales, de fiesta y de verano'),
+('Chaquetas', 'Chaquetas, abrigos y blazers'),
+('Sudaderas', 'Hoodies y sudaderas casuales'),
+('Faldas', 'Faldas de diferentes largos y estilos'),
+('Ropa Interior', 'Ropa interior y prendas básicas'),
+('Accesorios', 'Bolsos, cinturones, gorros y otros accesorios'),
+('Calzado', 'Zapatos, zapatillas y sandalias'),
+('Trajes de Baño', 'Bikinis y bañadores'),
+('Ropa Deportiva', 'Leggings, tops y prendas para entrenamiento');
+
+USE loopme;
+ALTER TABLE productos MODIFY COLUMN talla VARCHAR(50) NULL;
+ALTER TABLE productos MODIFY COLUMN color VARCHAR(50) NULL;
