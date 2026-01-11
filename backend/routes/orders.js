@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const clienteAuth = require("../middleware/clienteAuth");
 
 // Obtener todos los pedidos
 router.get("/", (req, res) => {
@@ -26,6 +27,158 @@ router.get("/", (req, res) => {
         
         res.json({ success: true, pedidos: results });
     });
+});
+// Crear pedido desde checkout
+router.post("/create", clienteAuth, async (req, res) => {
+    try {
+        const { items, shipping, payment, total } = req.body;
+        
+        if (!items || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "El carrito está vacío"
+            });
+        }
+        
+        const connection = await db.promise().getConnection();
+        
+        try {
+            await connection.beginTransaction();
+            
+            // 1. Crear pedido
+            const [orderResult] = await connection.execute(
+                `INSERT INTO pedidos (cliente_id, usuario_id, estado, total, notas) 
+                 VALUES (?, 1, 'Pendiente', ?, ?)`,
+                [req.cliente.id, total, JSON.stringify(shipping)]
+            );
+            
+            const orderId = orderResult.insertId;
+            
+            // 2. Agregar detalles del pedido
+            for (const item of items) {
+                // Verificar stock antes de proceder
+                const [stockRows] = await connection.execute(
+                    `SELECT stock_actual FROM inventario WHERE producto_id = ?`,
+                    [item.id]
+                );
+                
+                if (stockRows.length === 0 || stockRows[0].stock_actual < item.cantidad) {
+                    throw new Error(`Stock insuficiente para el producto: ${item.nombre}`);
+                }
+                
+                await connection.execute(
+                    `INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [orderId, item.id, item.cantidad, item.precio, item.precio * item.cantidad]
+                );
+                
+                // 3. Actualizar stock
+                await connection.execute(
+                    `UPDATE inventario 
+                     SET stock_actual = stock_actual - ?,
+                         ultima_actualizacion = CURRENT_TIMESTAMP
+                     WHERE producto_id = ?`,
+                    [item.cantidad, item.id]
+                );
+                
+                // 4. Verificar y crear alerta si el stock es bajo
+                await connection.execute(
+                    `INSERT INTO alertas_stock(producto_id, mensaje)
+                     SELECT ?, 'Stock bajo después de venta'
+                     FROM inventario i
+                     WHERE i.producto_id = ?
+                     AND i.stock_actual <= i.stock_minimo
+                     AND NOT EXISTS (
+                         SELECT 1 FROM alertas_stock a 
+                         WHERE a.producto_id = ? AND a.resuelta = 0
+                     )`,
+                    [item.id, item.id, item.id]
+                );
+            }
+            
+            // 5. Crear registro de pago
+            await connection.execute(
+                `INSERT INTO pagos (pedido_id, metodo, monto, estado, referencia)
+                 VALUES (?, ?, ?, 'Aprobado', ?)`,
+                [orderId, payment.method || 'Stripe', total, payment.intentId || 'N/A']
+            );
+            
+            await connection.commit();
+            
+            // Enviar email de confirmación (simulado)
+            console.log(`Pedido #${orderId} creado exitosamente para cliente ${req.cliente.email}`);
+            
+            res.json({
+                success: true,
+                message: "Pedido creado exitosamente",
+                orderId: orderId,
+                orderNumber: `ORD-${orderId.toString().padStart(6, '0')}`
+            });
+            
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+        
+    } catch (error) {
+        console.error("Error creating order:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error al crear el pedido"
+        });
+    }
+});
+
+// Obtener pedido por payment intent
+router.get("/payment-intent/:id", clienteAuth, async (req, res) => {
+    try {
+        const paymentIntentId = req.params.id;
+        
+        const [orders] = await db.promise().execute(
+            `SELECT p.*, c.nombre as cliente_nombre, c.email as cliente_email,
+                    pa.metodo as metodo_pago, pa.referencia as referencia_pago
+             FROM pedidos p 
+             LEFT JOIN clientes c ON p.cliente_id = c.id
+             LEFT JOIN pagos pa ON p.id = pa.pedido_id
+             WHERE pa.referencia = ? AND p.cliente_id = ?`,
+            [paymentIntentId, req.cliente.id]
+        );
+        
+        if (orders.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Pedido no encontrado"
+            });
+        }
+        
+        const order = orders[0];
+        
+        // Obtener detalles del pedido
+        const [details] = await db.promise().execute(
+            `SELECT d.*, pr.nombre as producto_nombre, pr.imagen_url
+             FROM detalles_pedido d
+             LEFT JOIN productos pr ON d.producto_id = pr.id
+             WHERE d.pedido_id = ?`,
+            [order.id]
+        );
+        
+        res.json({
+            success: true,
+            order: {
+                ...order,
+                detalles: details
+            }
+        });
+        
+    } catch (error) {
+        console.error("Error retrieving order:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error al obtener detalles del pedido"
+        });
+    }
 });
 
 // Obtener un pedido específico

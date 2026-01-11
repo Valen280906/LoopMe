@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - LoopMe</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Estilos globales LoopMe -->
+    <link rel="stylesheet" href="css/public.css">
+    <style>
+        .checkout-container {
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+        
+        .checkout-steps {
+            margin-bottom: 40px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step.active .step-number {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        
+        .step-info {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .step-description {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .checkout-section {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .section-title-checkout {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .order-summary-total {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        /* Estilos Stripe Elements */
+        .StripeElement {
+            box-sizing: border-box;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            background-color: white;
+            transition: var(--transition);
+        }
+        
+        .StripeElement--focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(118, 75, 162, 0.25);
+        }
+        
+        .StripeElement--invalid {
+            border-color: #dc3545;
+        }
+        
+        .StripeElement--complete {
+            border-color: #28a745;
+        }
+        
+        .card-errors {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        .payment-loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner-payment {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(118, 75, 162, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .test-card-info {
+            background: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+        
+        .test-card-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .test-card-item {
+            display: flex;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .test-card-label {
+            min-width: 150px;
+            font-weight: 500;
+        }
+        
+        .test-card-value {
+            font-family: monospace;
+        }
+        
+        .test-card-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .address-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-loopme">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-loopme" href="index.html">
+                <i class="fas fa-tshirt"></i> LoopMe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLoopMe">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLoopMe">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="tienda.html">
+                            <i class="fas fa-store"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="carrito.html">
+                            <i class="fas fa-shopping-cart"></i> Carrito
+                            <span class="badge bg-light text-primary ms-1" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="#" id="loginLink">
+                            <i class="fas fa-user"></i> Mi Cuenta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Checkout -->
+    <div class="container checkout-container">
+        <!-- Pasos del checkout -->
+        <div class="checkout-steps">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-info">
+                            <div class="step-title">Carrito</div>
+                            <div class="step-description">Revisa tus productos</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step active">
+                        <div class="step-number">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Información</div>
+                            <div class="step-description">Datos de envío y facturación</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Pago</div>
+                            <div class="step-description">Finaliza tu compra</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Información del pedido -->
+            <div class="col-lg-8">
+                <!-- Información de envío -->
+                <div class="checkout-section">
+                    <h3 class="section-title-checkout">
+                        <i class="fas fa-truck me-2"></i>Información de Envío
+                    </h3>
+                    
+                    <div id="shippingInfo">
+                        <div class="address-form">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Apellido *</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Dirección *</label>
+                                <input type="text" class="form-control" id="address" required>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Ciudad *</label>
+                                    <input type="text" class="form-control" id="city" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Estado *</label>
+                                    <select class="form-control" id="state" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="DF">Distrito Federal</option>
+                                        <option value="Miranda">Miranda</option>
+                                        <option value="Carabobo">Carabobo</option>
+                                        <option value="Zulia">Zulia</option>
+                                        <option value="Lara">Lara</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Código Postal *</label>
+                                    <input type="text" class="form-control" id="postalCode" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Teléfono *</label>
+                                <input type="tel" class="form-control" id="phone" required>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="saveAddress">
+                                <label class="form-check-label" for="saveAddress">
+                                    Guardar esta información para próximas compras
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de pago -->
+                <div class="checkout-section">
+                    <h3 class="section-title-checkout">
+                        <i class="fas fa-credit-card me-2"></i>Información de Pago
+                    </h3>
+                    
+                    <!-- Información de tarjetas de prueba -->
+                    <div class="test-card-info">
+                        <div class="test-card-title">
+                            <i class="fas fa-vial me-2"></i>Tarjetas de Prueba Stripe (Modo Test)
+                        </div>
+                        <div class="test-card-item">
+                            <span class="test-card-label">Pago exitoso:</span>
+                            <span class="test-card-value">4242 4242 4242 4242</span>
+                        </div>
+                        <div class="test-card-item">
+                            <span class="test-card-label">CVV válido:</span>
+                            <span class="test-card-value">Cualquier número de 3 dígitos</span>
+                        </div>
+                        <div class="test-card-item">
+                            <span class="test-card-label">Fecha:</span>
+                            <span class="test-card-value">Cualquier fecha futura</span>
+                        </div>
+                        <div class="test-card-item">
+                            <span class="test-card-label">Pago rechazado:</span>
+                            <span class="test-card-value">4000 0000 0000 9995</span>
+                        </div>
+                    </div>
+                    
+                    <div class="test-card-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Modo de prueba activado:</strong> No se realizarán cargos reales. Estas tarjetas funcionan solo en entorno de desarrollo.
+                    </div>
+                    
+                    <!-- Formulario de pago Stripe -->
+                    <form id="payment-form" class="mt-4">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre en la tarjeta *</label>
+                            <input type="text" class="form-control" id="cardholder-name" 
+                                   placeholder="Ej: Juan Pérez" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Detalles de la tarjeta *</label>
+                            <div id="card-element" class="form-control p-0">
+                                <!-- Stripe Card Element se inyectará aquí -->
+                            </div>
+                            <div id="card-errors" class="card-errors" role="alert"></div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="save-card">
+                            <label class="form-check-label" for="save-card">
+                                Guardar esta tarjeta para próximas compras
+                            </label>
+                        </div>
+                    </form>
+                    
+                    <!-- Términos y condiciones -->
+                    <div class="mt-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="acceptTerms" required>
+                            <label class="form-check-label" for="acceptTerms">
+                                Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Términos y Condiciones</a> 
+                                y la <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Política de Privacidad</a> *
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen del pedido -->
+            <div class="col-lg-4">
+                <div class="checkout-section">
+                    <h3 class="section-title-checkout">
+                        <i class="fas fa-receipt me-2"></i>Resumen del Pedido
+                    </h3>
+                    
+                    <div id="orderSummary">
+                        <!-- Los productos se cargarán aquí -->
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando resumen...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="order-summary-total">
+                        <span>Total a Pagar:</span>
+                        <span id="totalAmount">$0.00</span>
+                    </div>
+                    
+                    <button class="btn btn-loopme btn-lg w-100 mt-4" id="submit-payment" disabled>
+                        <i class="fas fa-lock me-2"></i> Pagar Ahora
+                    </button>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Pago seguro procesado por Stripe
+                        </small>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="carrito.html" class="btn btn-loopme-outline w-100">
+                            <i class="fas fa-arrow-left me-2"></i> Volver al Carrito
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Información de ayuda -->
+                <div class="checkout-section mt-3">
+                    <h5 class="mb-3">
+                        <i class="fas fa-question-circle me-2"></i>¿Necesitas ayuda?
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <small>+58 412-1234567</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <small>soporte@loopme.com</small>
+                        </li>
+                        <li>
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            <small>Lun-Vie: 9am-6pm</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Términos y Condiciones -->
+    <div class="modal fade" id="termsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Términos y Condiciones</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>1. Aceptación de los Términos</strong></p>
+                    <p>Al realizar una compra en LoopMe, aceptas estos términos y condiciones.</p>
+                    
+                    <p><strong>2. Productos y Precios</strong></p>
+                    <p>Los precios están en dólares americanos (USD). Nos reservamos el derecho de cambiar precios sin previo aviso.</p>
+                    
+                    <p><strong>3. Pagos</strong></p>
+                    <p>Aceptamos pagos mediante tarjeta de crédito/débito a través de Stripe. Todos los pagos son seguros y encriptados.</p>
+                    
+                    <p><strong>4. Envíos</strong></p>
+                    <p>Los tiempos de envío son estimados. No nos hacemos responsables por retrasos de las empresas de transporte.</p>
+                    
+                    <p><strong>5. Devoluciones</strong></p>
+                    <p>Aceptamos devoluciones dentro de los 30 días posteriores a la recepción, siempre que los productos estén en su estado original.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-loopme" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Política de Privacidad -->
+    <div class="modal fade" id="privacyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Política de Privacidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>1. Información que Recopilamos</strong></p>
+                    <p>Recopilamos información necesaria para procesar tu pedido: nombre, dirección, email y teléfono.</p>
+                    
+                    <p><strong>2. Uso de la Información</strong></p>
+                    <p>Usamos tu información para procesar pedidos, enviar confirmaciones y mejorar nuestro servicio.</p>
+                    
+                    <p><strong>3. Seguridad de los Datos</strong></p>
+                    <p>Tus datos están protegidos mediante encriptación SSL. No almacenamos información de tarjetas de crédito.</p>
+                    
+                    <p><strong>4. Cookies</strong></p>
+                    <p>Utilizamos cookies para mejorar tu experiencia de compra. Puedes desactivarlas en la configuración de tu navegador.</p>
+                    
+                    <p><strong>5. Tus Derechos</strong></p>
+                    <p>Tienes derecho a acceder, corregir o eliminar tu información personal. Contáctanos en privacidad@loopme.com.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-loopme" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="loopme-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Comprar</h5>
+                        <ul>
+                            <li><a href="#">Mujer</a></li>
+                            <li><a href="#">Hombre</a></li>
+                            <li><a href="#">Niños</a></li>
+                            <li><a href="#">Ofertas</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#">Políticas</a></li>
+                            <li><a href="#">Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
+        let paymentIntentClientSecret = null;
+        let carrito = [];
+        let orderTotal = 0;
+        let clienteInfo = null;
+
+        // Inicializar Stripe
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarAutenticacion();
+            cargarCarrito();
+            cargarDatosCliente();
+            inicializarStripe();
+            inicializarFormulario();
+        });
+
+        // Verificar autenticación
+        function verificarAutenticacion() {
+            const token = localStorage.getItem("cliente_token");
+            const clienteData = localStorage.getItem("cliente_info");
+            const loginLink = document.getElementById("loginLink");
+            
+            if (token && clienteData) {
+                try {
+                    clienteInfo = JSON.parse(clienteData);
+                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre.split(' ')[0]}`;
+                    loginLink.href = "javascript:void(0)";
+                    
+                    loginLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        mostrarMenuUsuario();
+                    });
+                } catch(e) {
+                    redirigirSiNoAutenticado();
+                }
+            } else {
+                redirigirSiNoAutenticado();
+            }
+        }
+
+        function redirigirSiNoAutenticado() {
+            if (confirm("Para continuar con la compra necesitas iniciar sesión. ¿Deseas iniciar sesión ahora?")) {
+                window.location.href = "login-cliente.html?redirect=checkout";
+            } else {
+                window.location.href = "tienda.html";
+            }
+        }
+
+        // Cargar datos del cliente en el formulario
+        function cargarDatosCliente() {
+            if (clienteInfo) {
+                // Separar nombre y apellido si es posible
+                const nombreCompleto = clienteInfo.nombre || '';
+                const nombres = nombreCompleto.split(' ');
+                
+                if (nombres.length >= 2) {
+                    document.getElementById('firstName').value = nombres[0];
+                    document.getElementById('lastName').value = nombres.slice(1).join(' ');
+                } else {
+                    document.getElementById('firstName').value = nombreCompleto;
+                }
+                
+                document.getElementById('email').value = clienteInfo.email || '';
+            }
+        }
+
+        // Cargar carrito
+        function cargarCarrito() {
+            carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
+            
+            if (carrito.length === 0) {
+                // Verificar si hay una compra directa
+                const compraDirecta = JSON.parse(localStorage.getItem("comprar_ahora") || "[]");
+                if (compraDirecta.length > 0) {
+                    carrito = compraDirecta;
+                } else {
+                    mostrarCarritoVacio();
+                    return;
+                }
+            }
+            
+            mostrarResumenOrden();
+        }
+
+        // Mostrar resumen del pedido
+        function mostrarResumenOrden() {
+            const container = document.getElementById("orderSummary");
+            let html = '';
+            
+            // Calcular totales
+            let subtotal = 0;
+            let shipping = 0;
+            let taxes = 0;
+            
+            carrito.forEach(item => {
+                const itemTotal = item.precio * item.cantidad;
+                subtotal += itemTotal;
+                
+                html += `
+                    <div class="order-summary-item">
+                        <div>
+                            <strong>${item.nombre}</strong>
+                            <div class="text-muted">
+                                ${item.cantidad} x $${parseFloat(item.precio).toFixed(2)}
+                            </div>
+                        </div>
+                        <div>$${parseFloat(itemTotal).toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            
+            // Calcular envío (gratis para compras > $50)
+            shipping = subtotal > 50 ? 0 : 5.00;
+            
+            // Calcular impuestos (16%)
+            taxes = subtotal * 0.16;
+            
+            // Calcular total
+            orderTotal = subtotal + shipping + taxes;
+            
+            // Agregar resumen de costos
+            html += `
+                <div class="order-summary-item">
+                    <span>Subtotal</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                </div>
+                <div class="order-summary-item">
+                    <span>Envío</span>
+                    <span>${shipping === 0 ? '<span class="text-success">Gratis</span>' : `$${shipping.toFixed(2)}`}</span>
+                </div>
+                <div class="order-summary-item">
+                    <span>Impuestos (16%)</span>
+                    <span>$${taxes.toFixed(2)}</span>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            document.getElementById("totalAmount").textContent = `$${orderTotal.toFixed(2)}`;
+        }
+
+        // Mostrar carrito vacío
+        function mostrarCarritoVacio() {
+            const container = document.querySelector(".checkout-container");
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h3>Tu carrito está vacío</h3>
+                    <p class="text-muted mb-4">No hay productos para procesar el pago.</p>
+                    <a href="tienda.html" class="btn btn-loopme">
+                        <i class="fas fa-store me-2"></i> Ir a la Tienda
+                    </a>
+                </div>
+            `;
+        }
+
+        // Inicializar Stripe
+        function inicializarStripe() {
+            // Clave pública de Stripe (modo test)
+            const stripePublicKey = "pk_test_51SoR5cLG4hiwYcxwLxUSAP0kUUWQJh5UoW0ORWAGR5auMJ04ksUgNXLAzLbHuRo6Um07LCWCGtTQFCPQQE1mwlZt00deoy4ZjF";
+
+            
+            stripe = Stripe(stripePublicKey);
+            elements = stripe.elements();
+            
+            // Crear elemento de tarjeta
+            const style = {
+                base: {
+                    color: '#32325d',
+                    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                    fontSmoothing: 'antialiased',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: '#aab7c4'
+                    }
+                },
+                invalid: {
+                    color: '#dc3545',
+                    iconColor: '#dc3545'
+                }
+            };
+            
+            cardElement = elements.create('card', { 
+                style: style,
+                hidePostalCode: true 
+            });
+            cardElement.mount('#card-element');
+            
+            // Manejar errores de la tarjeta
+            cardElement.addEventListener('change', function(event) {
+                const displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+        }
+
+        // Inicializar formulario
+        function inicializarFormulario() {
+            const form = document.getElementById('payment-form');
+            const submitButton = document.getElementById('submit-payment');
+            
+            // Habilitar botón cuando se acepten términos
+            document.getElementById('acceptTerms').addEventListener('change', function() {
+                submitButton.disabled = !this.checked;
+            });
+            
+            // Manejar envío del formulario
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                if (!validarFormulario()) {
+                    return;
+                }
+                
+                await procesarPago();
+            });
+        }
+
+        // Validar formulario
+        function validarFormulario() {
+            let isValid = true;
+            const requiredFields = ['firstName', 'lastName', 'email', 'address', 'city', 'state', 'postalCode', 'phone'];
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!document.getElementById('acceptTerms').checked) {
+                alert("Debes aceptar los términos y condiciones para continuar.");
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // Procesar pago
+        async function procesarPago() {
+            const submitButton = document.getElementById('submit-payment');
+            const cardholderName = document.getElementById('cardholder-name').value;
+            
+            // Deshabilitar botón y mostrar loading
+            submitButton.disabled = true;
+            submitButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Procesando pago...
+            `;
+            
+            try {
+                // 1. Crear Payment Intent en el backend
+                const paymentIntentResponse = await fetch('http://localhost:3000/api/payments/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("cliente_token")}`
+                    },
+                    body: JSON.stringify({
+                       amount: orderTotal,
+
+                        currency: 'usd',
+                        metadata: {
+                            order_id: 'ORDER-' + Date.now(),
+                            items_count: carrito.length
+                        }
+                    })
+                });
+                
+                if (!paymentIntentResponse.ok) {
+                    throw new Error('Error al crear el intento de pago');
+                }
+                
+                const paymentIntentData = await paymentIntentResponse.json();
+                paymentIntentClientSecret = paymentIntentData.clientSecret;
+                
+                // 2. Confirmar pago con Stripe
+                const { paymentIntent, error } = await stripe.confirmCardPayment(
+                    paymentIntentClientSecret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: cardholderName,
+                                email: document.getElementById('email').value,
+                                address: {
+                                    line1: document.getElementById('address').value,
+                                    city: document.getElementById('city').value,
+                                    state: document.getElementById('state').value,
+                                    postal_code: document.getElementById('postalCode').value,
+                                    country: 'VE'
+                                }
+                            }
+                        }
+                    }
+                );
+                
+                if (error) {
+                    // Mostrar error
+                    document.getElementById('card-errors').textContent = error.message;
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-lock me-2"></i> Pagar Ahora';
+                    return;
+                }
+                
+                if (paymentIntent.status === 'succeeded') {
+                    // 3. Crear pedido en el backend
+                    await crearPedido(paymentIntent.id);
+                    
+                    // 4. Redirigir a página de éxito
+                    window.location.href = `pago-exitoso.html?payment_intent=${paymentIntent.id}&amount=${orderTotal}`;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('card-errors').textContent = 'Error al procesar el pago. Por favor, intenta de nuevo.';
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-lock me-2"></i> Pagar Ahora';
+            }
+        }
+
+        // Crear pedido en el backend
+        async function crearPedido(paymentIntentId) {
+            const shippingInfo = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                postalCode: document.getElementById('postalCode').value,
+                phone: document.getElementById('phone').value
+            };
+            
+            const orderData = {
+                items: carrito,
+                shipping: shippingInfo,
+                payment: {
+                    intentId: paymentIntentId,
+                    amount: orderTotal,
+                    method: 'Stripe'
+                },
+                total: orderTotal
+            };
+            
+            const response = await fetch('http://localhost:3000/api/orders/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("cliente_token")}`
+                },
+                body: JSON.stringify(orderData)
+            });
+            
+            if (response.ok) {
+                // Limpiar carrito después de orden exitosa
+                localStorage.removeItem("carrito");
+                localStorage.removeItem("comprar_ahora");
+            } else {
+                throw new Error('Error al crear el pedido');
+            }
+        }
+
+        // Menú desplegable para usuario autenticado
+        function mostrarMenuUsuario() {
+            const menuHTML = `
+                <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
+                    <div class="dropdown-header">
+                        <strong>${clienteInfo.nombre}</strong>
+                        <p class="mb-0 text-muted small">${clienteInfo.email}</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="pedidos.html">
+                        <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-heart me-2"></i>Favoritos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-user-edit me-2"></i>Mi Perfil
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                </div>
+            `;
+            
+            const loginLink = document.getElementById("loginLink");
+            let dropdownMenu = loginLink.nextElementSibling;
+            
+            if (!dropdownMenu || !dropdownMenu.classList.contains("dropdown-menu")) {
+                dropdownMenu = document.createElement("div");
+                dropdownMenu.className = "dropdown-menu";
+                loginLink.parentElement.appendChild(dropdownMenu);
+            }
+            
+            dropdownMenu.innerHTML = menuHTML;
+            dropdownMenu.classList.add("show");
+            
+            document.addEventListener('click', function closeMenu(e) {
+                if (!loginLink.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove("show");
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+
+        // Cerrar sesión
+        function logoutCliente() {
+            if (confirm("¿Estás seguro de cerrar sesión?")) {
+                localStorage.removeItem("cliente_token");
+                localStorage.removeItem("cliente_info");
+                window.location.href = "tienda.html";
+            }
+        }
+    </script>
+</body>
+</html>

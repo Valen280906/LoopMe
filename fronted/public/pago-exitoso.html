@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Pago Exitoso! - LoopMe</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos globales LoopMe -->
+    <link rel="stylesheet" href="css/public.css">
+    <style>
+        .success-container {
+            margin-top: 80px;
+            margin-bottom: 80px;
+            text-align: center;
+        }
+        
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: pulse 2s infinite;
+        }
+        
+        .success-icon i {
+            font-size: 3.5rem;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .success-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .success-message {
+            font-size: 1.2rem;
+            color: var(--dark-color);
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        .order-details {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 500px;
+            margin: 40px auto;
+            text-align: left;
+        }
+        
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .detail-value {
+            text-align: right;
+        }
+        
+        .whats-next {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin-top: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .next-steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .next-step {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 250px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .next-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .step-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .step-description {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .action-buttons {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .loading-success {
+            text-align: center;
+            padding: 100px 0;
+        }
+        
+        .spinner-success {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(40, 167, 69, 0.2);
+            border-top-color: #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-loopme">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-loopme" href="index.html">
+                <i class="fas fa-tshirt"></i> LoopMe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLoopMe">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLoopMe">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="index.html">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="tienda.html">
+                            <i class="fas fa-store"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="pedidos.html">
+                            <i class="fas fa-clipboard-list"></i> Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="#" id="loginLink">
+                            <i class="fas fa-user"></i> Mi Cuenta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <!-- Loading inicial -->
+        <div id="loadingSuccess" class="loading-success">
+            <div class="spinner-success"></div>
+            <p>Confirmando tu pago...</p>
+        </div>
+        
+        <!-- Pago exitoso -->
+        <div id="successContent" class="success-container" style="display: none;">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            
+            <h1 class="success-title">¡Pago Exitoso!</h1>
+            
+            <p class="success-message">
+                Gracias por tu compra. Tu pedido ha sido procesado exitosamente 
+                y está siendo preparado para el envío.
+            </p>
+            
+            <!-- Detalles del pedido -->
+            <div class="order-details">
+                <h4 class="mb-4">
+                    <i class="fas fa-receipt me-2"></i>Resumen de tu Pedido
+                </h4>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Número de Pedido:</span>
+                    <span class="detail-value" id="orderNumber">#00000</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Fecha:</span>
+                    <span class="detail-value" id="orderDate">Cargando...</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Método de Pago:</span>
+                    <span class="detail-value">
+                        <i class="fab fa-cc-stripe me-1"></i> Stripe
+                    </span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">ID de Transacción:</span>
+                    <span class="detail-value" id="transactionId">pi_xxxxxx</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Total Pagado:</span>
+                    <span class="detail-value fw-bold text-success" id="orderTotal">$0.00</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Estado:</span>
+                    <span class="detail-value">
+                        <span class="badge bg-success">Pagado</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- ¿Qué sigue? -->
+            <div class="whats-next">
+                <h4 class="mb-4">
+                    <i class="fas fa-shipping-fast me-2"></i>¿Qué sigue después de tu compra?
+                </h4>
+                
+                <div class="next-steps">
+                    <div class="next-step">
+                        <div class="step-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="step-title">Preparación</div>
+                        <div class="step-description">
+                            Tu pedido está siendo preparado en nuestro almacén.
+                        </div>
+                    </div>
+                    
+                    <div class="next-step">
+                        <div class="step-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="step-title">Envío</div>
+                        <div class="step-description">
+                            Recibirás un correo con el número de seguimiento.
+                        </div>
+                    </div>
+                    
+                    <div class="next-step">
+                        <div class="step-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="step-title">Entrega</div>
+                        <div class="step-description">
+                            Tu pedido llegará en 3-5 días hábiles.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Acciones -->
+            <div class="action-buttons">
+                <a href="tienda.html" class="btn btn-loopme btn-lg">
+                    <i class="fas fa-store me-2"></i> Seguir Comprando
+                </a>
+                <a href="pedidos.html" class="btn btn-loopme-outline btn-lg">
+                    <i class="fas fa-clipboard-list me-2"></i> Ver Mis Pedidos
+                </a>
+                <button class="btn btn-success btn-lg" onclick="imprimirComprobante()">
+                    <i class="fas fa-print me-2"></i> Imprimir Comprobante
+                </button>
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="mt-5">
+                <p class="text-muted">
+                    <small>
+                        <i class="fas fa-info-circle me-1"></i>
+                        Recibirás un correo de confirmación con los detalles de tu pedido. 
+                        Para cualquier consulta, contáctanos en <strong>soporte@loopme.com</strong>
+                    </small>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Error -->
+        <div id="errorContent" class="text-center py-5" style="display: none;">
+            <div class="text-danger mb-3">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+            </div>
+            <h3 class="mb-3">No se pudo verificar el pago</h3>
+            <p class="text-muted mb-4">
+                Lo sentimos, no pudimos encontrar la información de tu pago.
+            </p>
+            <a href="tienda.html" class="btn btn-loopme">
+                <i class="fas fa-arrow-left me-2"></i> Volver a la Tienda
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="loopme-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Comprar</h5>
+                        <ul>
+                            <li><a href="#">Mujer</a></li>
+                            <li><a href="#">Hombre</a></li>
+                            <li><a href="#">Niños</a></li>
+                            <li><a href="#">Ofertas</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#">Políticas</a></li>
+                            <li><a href="#">Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables
+        let paymentIntentId = null;
+        let orderDetails = null;
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarAutenticacion();
+            obtenerParametrosURL();
+            
+            if (paymentIntentId) {
+                obtenerDetallesPedido();
+            } else {
+                mostrarError();
+            }
+        });
+
+        // Verificar autenticación
+        function verificarAutenticacion() {
+            const token = localStorage.getItem("cliente_token");
+            const clienteData = localStorage.getItem("cliente_info");
+            const loginLink = document.getElementById("loginLink");
+            
+            if (token && clienteData) {
+                try {
+                    const clienteInfo = JSON.parse(clienteData);
+                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre.split(' ')[0]}`;
+                    loginLink.href = "javascript:void(0)";
+                    
+                    loginLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        mostrarMenuUsuario();
+                    });
+                } catch(e) {
+                    // Si hay error, no mostrar menú
+                }
+            }
+        }
+
+        // Obtener parámetros de la URL
+        function obtenerParametrosURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            paymentIntentId = urlParams.get('payment_intent');
+            
+            // Si no hay payment_intent, intentar obtener de sessionStorage
+            if (!paymentIntentId) {
+                paymentIntentId = sessionStorage.getItem('last_payment_intent');
+            }
+        }
+
+        // Obtener detalles del pedido
+        async function obtenerDetallesPedido() {
+            try {
+                const response = await fetch(`http://localhost:3000/api/orders/payment-intent/${paymentIntentId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem("cliente_token")}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        orderDetails = data.order;
+                        mostrarPagoExitoso();
+                    } else {
+                        mostrarError();
+                    }
+                } else {
+                    // Si no hay conexión al backend, mostrar datos básicos de la URL
+                    mostrarPagoBasico();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarPagoBasico();
+            }
+        }
+
+        // Mostrar pago exitoso con datos del backend
+        function mostrarPagoExitoso() {
+            document.getElementById('loadingSuccess').style.display = 'none';
+            document.getElementById('successContent').style.display = 'block';
+            
+            // Actualizar detalles
+            document.getElementById('orderNumber').textContent = `#${orderDetails.id || '00000'}`;
+            document.getElementById('orderDate').textContent = new Date(orderDetails.fecha_pedido || Date.now()).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('transactionId').textContent = paymentIntentId || 'pi_xxxxxx';
+            document.getElementById('orderTotal').textContent = `$${parseFloat(orderDetails.total || 0).toFixed(2)}`;
+            
+            // Guardar en sessionStorage para refrescos de página
+            sessionStorage.setItem('last_payment_intent', paymentIntentId);
+            sessionStorage.setItem('last_order', JSON.stringify(orderDetails));
+        }
+
+        // Mostrar pago básico (cuando no hay conexión al backend)
+        function mostrarPagoBasico() {
+            document.getElementById('loadingSuccess').style.display = 'none';
+            document.getElementById('successContent').style.display = 'block';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const amount = urlParams.get('amount');
+            
+            // Generar número de pedido aleatorio
+            const orderNum = 'ORD-' + Date.now().toString().slice(-8);
+            
+            document.getElementById('orderNumber').textContent = orderNum;
+            document.getElementById('orderDate').textContent = new Date().toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('transactionId').textContent = paymentIntentId || 'pi_xxxxxx';
+            document.getElementById('orderTotal').textContent = `$${parseFloat(amount || 0).toFixed(2)}`;
+            
+            // Guardar en sessionStorage
+            sessionStorage.setItem('last_payment_intent', paymentIntentId);
+            sessionStorage.setItem('last_order_amount', amount);
+        }
+
+        // Mostrar error
+        function mostrarError() {
+            document.getElementById('loadingSuccess').style.display = 'none';
+            document.getElementById('errorContent').style.display = 'block';
+        }
+
+        // Imprimir comprobante
+        function imprimirComprobante() {
+            const ventanaImpresion = window.open('', '_blank');
+            
+            const contenido = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Comprobante de Pago - LoopMe</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .logo { font-size: 24px; font-weight: bold; color: #764ba2; }
+                        .title { font-size: 20px; margin: 20px 0; }
+                        .details { border: 1px solid #ddd; padding: 20px; margin: 20px 0; }
+                        .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
+                        .total { font-size: 18px; font-weight: bold; margin-top: 20px; }
+                        .footer { margin-top: 40px; font-size: 12px; color: #666; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="logo">LoopMe Tienda de Ropa</div>
+                        <div class="title">COMPROBANTE DE PAGO</div>
+                    </div>
+                    
+                    <div class="details">
+                        <div class="detail-row">
+                            <span>Número de Pedido:</span>
+                            <span>${document.getElementById('orderNumber').textContent}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Fecha:</span>
+                            <span>${document.getElementById('orderDate').textContent}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>ID de Transacción:</span>
+                            <span>${document.getElementById('transactionId').textContent}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Método de Pago:</span>
+                            <span>Stripe</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Estado:</span>
+                            <span>Pagado</span>
+                        </div>
+                        <div class="detail-row total">
+                            <span>Total Pagado:</span>
+                            <span>${document.getElementById('orderTotal').textContent}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Gracias por tu compra en LoopMe</p>
+                        <p>Caracas, Venezuela | soporte@loopme.com</p>
+                        <p>${new Date().toLocaleDateString()}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            ventanaImpresion.document.write(contenido);
+            ventanaImpresion.document.close();
+            ventanaImpresion.print();
+        }
+
+        // Menú desplegable para usuario autenticado
+        function mostrarMenuUsuario() {
+            const clienteData = localStorage.getItem("cliente_info");
+            if (!clienteData) return;
+            
+            const clienteInfo = JSON.parse(clienteData);
+            const menuHTML = `
+                <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
+                    <div class="dropdown-header">
+                        <strong>${clienteInfo.nombre}</strong>
+                        <p class="mb-0 text-muted small">${clienteInfo.email}</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="pedidos.html">
+                        <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-heart me-2"></i>Favoritos
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <i class="fas fa-user-edit me-2"></i>Mi Perfil
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                </div>
+            `;
+            
+            const loginLink = document.getElementById("loginLink");
+            let dropdownMenu = loginLink.nextElementSibling;
+            
+            if (!dropdownMenu || !dropdownMenu.classList.contains("dropdown-menu")) {
+                dropdownMenu = document.createElement("div");
+                dropdownMenu.className = "dropdown-menu";
+                loginLink.parentElement.appendChild(dropdownMenu);
+            }
+            
+            dropdownMenu.innerHTML = menuHTML;
+            dropdownMenu.classList.add("show");
+            
+            document.addEventListener('click', function closeMenu(e) {
+                if (!loginLink.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove("show");
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+
+        // Cerrar sesión
+        function logoutCliente() {
+            if (confirm("¿Estás seguro de cerrar sesión?")) {
+                localStorage.removeItem("cliente_token");
+                localStorage.removeItem("cliente_info");
+                window.location.href = "tienda.html";
+            }
+        }
+    </script>
+</body>
+</html>

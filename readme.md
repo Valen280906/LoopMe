@@ -229,3 +229,20 @@ Para la autenticación del sistema LoopMe se decidió implementar un esquema bas
 ---
 
 
+Pago exitoso:
+
+Número: 4242 4242 4242 4242
+
+Fecha: Cualquier fecha futura
+
+CVV: Cualquier 3 dígitos
+
+Código postal: Cualquier 5 dígitos
+
+Pago rechazado:
+
+Número: 4000 0000 0000 9995
+
+Requiere autenticación 3D Secure:
+
+Número: 4000 0025 0000 3155

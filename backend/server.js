@@ -1,13 +1,16 @@
+// Configuración
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./db");
 const authMiddleware = require("./middleware/auth");
 const isAdmin = require("./middleware/isAdmin");  
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_...');
 const app = express();
 
-// Configuración
-require("dotenv").config();
+
 
 // Middleware
 app.use(cors());
@@ -37,6 +40,7 @@ app.use("/api/admin/products", require("./routes/products"));
 app.use("/api/admin/users", authMiddleware, isAdmin, require("./routes/users"));
 app.use("/api/admin/orders", authMiddleware, require("./routes/orders")); 
 app.use("/api/admin/reports", authMiddleware, isAdmin, require("./routes/reports"));
+app.use("/api/payments", require("./routes/payments"));
 
 // Manejo de errores
 app.use((err, req, res, next) => {
