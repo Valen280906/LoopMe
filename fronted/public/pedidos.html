@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - LoopMe</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos LoopMe -->
+    <link rel="stylesheet" href="css/public.css">
+    <style>
+        .badge-pendiente {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .badge-pagado {
+            background-color: #17a2b8;
+            color: #fff;
+        }
+
+        .badge-enviado {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .badge-entregado {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .badge-cancelado {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-loopme">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-loopme" href="index.html">
+                <i class="fas fa-tshirt"></i> LoopMe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLoopMe">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLoopMe">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="index.html">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="tienda.html">
+                            <i class="fas fa-store"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme active" href="pedidos.html">
+                            <i class="fas fa-clipboard-list"></i> Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="#" id="loginLink">
+                            <i class="fas fa-user"></i> Mi Cuenta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-light py-5 mb-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold animate-up">Mis Pedidos</h1>
+            <p class="lead text-muted animate-up">Revisa el estado de tus compras y envíos</p>
+        </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th># Pedido</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPedidos">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">Cargando tus pedidos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="loopme-footer mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center py-4">
+                    <p class="mb-0 text-white">&copy; 2024 LoopMe - Tu Tienda de Moda</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let token = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            cargarMisPedidos();
+        });
+
+        function verificarAutenticacion() {
+            token = localStorage.getItem("cliente_token");
+            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
+            const loginLink = document.getElementById("loginLink");
+
+            if (!token) {
+                // Si no hay token, redirigir a login o mostrar opción
+                document.getElementById('tablaPedidos').innerHTML = `
+                    <tr><td colspan="5" class="text-center py-4">
+                        Debes <a href="login-cliente.html">iniciar sesión</a> para ver tus pedidos.
+                    </td></tr>
+                `;
+                loginLink.href = "login-cliente.html";
+                return;
+            }
+
+            // Configurar menú usuario
+            loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre?.split(' ')[0] || 'Cliente'}`;
+            loginLink.href = "#";
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                mostrarMenuUsuario(clienteInfo);
+            });
+        }
+
+        function cargarMisPedidos() {
+            if (!token) return;
+
+            fetch("/api/orders/my-orders", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById("tablaPedidos");
+                    if (!data.success || !data.pedidos || data.pedidos.length === 0) {
+                        tbody.innerHTML = `
+                        <tr><td colspan="5" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-shopping-bag fa-3x mb-3"></i>
+                                <p>Aún no has realizado compras.</p>
+                                <a href="tienda.html" class="btn btn-loopme">Ir a la Tienda</a>
+                            </div>
+                        </td></tr>
+                    `;
+                        return;
+                    }
+
+                    let html = "";
+                    data.pedidos.forEach(p => {
+                        const fecha = new Date(p.fecha_pedido).toLocaleDateString();
+                        let badgeClass = "badge-secondary";
+                        let estadoTexto = p.estado;
+
+                        switch (p.estado) {
+                            case 'Pendiente': badgeClass = "badge-pendiente"; break;
+                            case 'Pagado': badgeClass = "badge-pagado"; break;
+                            case 'Enviado': badgeClass = "badge-enviado"; break;
+                            case 'Entregado': badgeClass = "badge-entregado"; break;
+                            case 'Cancelado': badgeClass = "badge-cancelado"; break;
+                        }
+
+                        // Acciones
+                        let acciones = `<button class="btn btn-outline-primary btn-sm me-2" onclick="verDetalle(${p.id})">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </button>`;
+
+                        if (p.estado === 'Enviado') {
+                            acciones += `<button class="btn btn-success btn-sm" onclick="confirmarRecepcion(${p.id})">
+                                        <i class="fas fa-box-open"></i> Recibí mi envío
+                                      </button>`;
+                        }
+
+                        html += `
+                        <tr>
+                            <td>#${p.id}</td>
+                            <td>${fecha}</td>
+                            <td>$${parseFloat(p.total).toFixed(2)}</td>
+                            <td><span class="badge ${badgeClass}">${estadoTexto}</span></td>
+                            <td>${acciones}</td>
+                        </tr>
+                    `;
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById("tablaPedidos").innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar pedidos.</td></tr>';
+                });
+        }
+
+        function confirmarRecepcion(id) {
+            if (!confirm("¿Confirmas que has recibido tu pedido correctamente?")) return;
+
+            fetch(`/api/orders/${id}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ estado: 'Entregado' })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("¡Gracias por confirmar! Esperamos que disfrutes tu compra.");
+                        cargarMisPedidos();
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(err => alert("Error de conexión"));
+        }
+
+        function verDetalle(id) {
+            // Implementar modal o redirección a detalle
+            alert("Detalle del pedido #" + id + " (Próximamente)");
+        }
+
+        // Menú desplegable reutilizado
+        function mostrarMenuUsuario(clienteInfo) {
+            // Logic similar to other pages
+            const menuHTML = `
+                <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
+                    <div class="dropdown-header">
+                        <strong>${clienteInfo.nombre}</strong>
+                        <p class="mb-0 text-muted small">${clienteInfo.email}</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="pedidos.html">
+                        <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                </div>
+            `;
+
+            const loginLink = document.getElementById("loginLink");
+            let dropdownMenu = loginLink.nextElementSibling;
+
+            if (!dropdownMenu || !dropdownMenu.classList.contains("dropdown-menu")) {
+                dropdownMenu = document.createElement("div");
+                dropdownMenu.className = "dropdown-menu";
+                loginLink.parentElement.appendChild(dropdownMenu);
+            }
+
+            dropdownMenu.innerHTML = menuHTML;
+            dropdownMenu.classList.add("show");
+
+            document.addEventListener('click', function closeMenu(e) {
+                if (!loginLink.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove("show");
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+
+        function logoutCliente() {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem("cliente_token");
+                localStorage.removeItem("cliente_info");
+                window.location.href = "tienda.html";
+            }
+        }
+    </script>
+</body>
+
+</html>

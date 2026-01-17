@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../css/public.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -33,7 +35,7 @@
                             <i class="fas fa-tshirt"></i> Productos e Inventario
                         </a>
                     </li>
-                    
+
                     <li class="nav-item">
                         <a class="nav-link" href="pedidos.html">
                             <i class="fas fa-shopping-cart"></i> Pedidos
@@ -71,7 +73,8 @@
                         <!-- Filtros -->
                         <div class="row mb-3">
                             <div class="col-md-3">
-                                <input type="text" id="buscarProducto" class="form-control" placeholder="Buscar producto...">
+                                <input type="text" id="buscarProducto" class="form-control"
+                                    placeholder="Buscar producto...">
                             </div>
                             <div class="col-md-3">
                                 <select id="filtroCategoria" class="form-control">
@@ -122,24 +125,25 @@
                 <div class="modal-body">
                     <form id="formProducto">
                         <input type="hidden" id="productoId">
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Nombre *</label>
                                     <input type="text" id="nombre" class="form-control" required>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Descripción</label>
                                     <textarea id="descripcion" class="form-control" rows="3"></textarea>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Precio ($) *</label>
-                                            <input type="number" id="precio" class="form-control" step="0.01" min="0" required>
+                                            <input type="number" id="precio" class="form-control" step="0.01" min="0"
+                                                required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -159,35 +163,37 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Color</label>
                                     <input type="text" id="color" class="form-control">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Categoría</label>
                                     <select id="categoria_id" class="form-control">
                                         <option value="">Seleccionar categoría</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Stock Actual</label>
-                                            <input type="number" id="stock_actual" class="form-control" min="0" value="0">
+                                            <input type="number" id="stock_actual" class="form-control" min="0"
+                                                value="0">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">Stock Mínimo</label>
-                                            <input type="number" id="stock_minimo" class="form-control" min="1" value="5">
+                                            <input type="number" id="stock_minimo" class="form-control" min="1"
+                                                value="5">
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Imagen del Producto</label>
                                     <input type="file" id="imagen_file" class="form-control" accept="image/*">
@@ -293,7 +299,7 @@
         let categorias = [];
 
         // Verificar autenticación al cargar
-        window.onload = function() {
+        window.onload = function () {
             verificarAutenticacion();
             cargarCategorias();
             cargarProductos();
@@ -303,42 +309,42 @@
         function verificarAutenticacion() {
             token = localStorage.getItem("token");
             const userData = localStorage.getItem("user");
-            
+
             if (!token || !userData) {
                 window.location.href = "login.html";
                 return;
             }
-            
+
             usuario = JSON.parse(userData);
-            
+
             // Verificar token con el servidor
             fetch("http://localhost:3000/api/auth/verify", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "login.html";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
                     window.location.href = "login.html";
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                window.location.href = "login.html";
-            });
+                });
         }
 
         // Previsualización de imagen
-        document.getElementById('imagen_file').addEventListener('change', function(e) {
+        document.getElementById('imagen_file').addEventListener('change', function (e) {
             const file = e.target.files[0];
             const preview = document.getElementById('imagen_preview');
-            
+
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px;">`;
                 };
                 reader.readAsDataURL(file);
@@ -365,15 +371,15 @@
                         categorias = data.categorias;
                         const select = document.getElementById("categoria_id");
                         const filtro = document.getElementById("filtroCategoria");
-                        
+
                         let options = '<option value="">Seleccionar categoría</option>';
                         let filtroOptions = '<option value="">Todas las categorías</option>';
-                        
+
                         categorias.forEach(categoria => {
                             options += `<option value="${categoria.id}">${categoria.nombre}</option>`;
                             filtroOptions += `<option value="${categoria.id}">${categoria.nombre}</option>`;
                         });
-                        
+
                         select.innerHTML = options;
                         filtro.innerHTML = filtroOptions;
                     }
@@ -390,13 +396,13 @@
                         productos = data.productos;
                         mostrarProductos(productos);
                     } else {
-                        document.getElementById("tablaProductos").innerHTML = 
+                        document.getElementById("tablaProductos").innerHTML =
                             `<tr><td colspan="8" class="text-center">No hay productos registrados</td></tr>`;
                     }
                 })
                 .catch(error => {
                     console.error("Error cargando productos:", error);
-                    document.getElementById("tablaProductos").innerHTML = 
+                    document.getElementById("tablaProductos").innerHTML =
                         `<tr><td colspan="8" class="text-center text-danger">Error al cargar productos</td></tr>`;
                 });
         }
@@ -411,28 +417,28 @@
                 tbody.innerHTML = `<tr><td colspan="8" class="text-center">No hay productos que coincidan</td></tr>`;
                 return;
             }
-            
+
             let html = "";
-            
+
             listaProductos.forEach(producto => {
-                const estado = producto.stock_bajo ? 
-                    '<span class="badge bg-warning">Stock Bajo</span>' : 
-                    (producto.stock_actual > 0 ? 
-                        '<span class="badge bg-success">Disponible</span>' : 
+                const estado = producto.stock_bajo ?
+                    '<span class="badge bg-warning">Stock Bajo</span>' :
+                    (producto.stock_actual > 0 ?
+                        '<span class="badge bg-success">Disponible</span>' :
                         '<span class="badge bg-danger">Agotado</span>');
-                
+
                 // Construir URL completa para la imagen
                 let imagenUrl = producto.imagen_url;
                 if (imagenUrl && !imagenUrl.startsWith('http')) {
                     imagenUrl = 'http://localhost:3000' + imagenUrl;
                 }
-                
-                const imagen = imagenUrl ? 
+
+                const imagen = imagenUrl ?
                     `<img src="${imagenUrl}" alt="${producto.nombre}" class="img-thumbnail" style="width: 50px; height: 50px;">` :
                     `<div class="img-thumbnail d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: #eee;">
                         <i class="fas fa-tshirt text-muted"></i>
                     </div>`;
-                
+
                 html += `
                     <tr>
                         <td>${producto.id}</td>
@@ -468,7 +474,7 @@
                     </tr>
                 `;
             });
-            
+
             tbody.innerHTML = html;
         }
 
@@ -478,11 +484,11 @@
                 alert('Solo los administradores pueden crear productos');
                 return;
             }
-            
+
             const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
             const titulo = document.getElementById('modalTitulo');
             const form = document.getElementById('formProducto');
-            
+
             if (!editar) {
                 titulo.textContent = 'Nuevo Producto';
                 form.reset();
@@ -490,17 +496,17 @@
                 document.getElementById('stock_actual').value = '0';
                 document.getElementById('stock_minimo').value = '5';
             }
-            
+
             modal.show();
         }
 
         // Guardar producto (crear o actualizar)
         function guardarProducto() {
             const productoId = document.getElementById('productoId').value;
-            
+
             // Usar FormData para enviar archivos
             const formData = new FormData();
-            
+
             // Agregar todos los campos del formulario
             formData.append('nombre', document.getElementById('nombre').value);
             formData.append('descripcion', document.getElementById('descripcion').value);
@@ -510,7 +516,7 @@
             formData.append('categoria_id', document.getElementById('categoria_id').value || '');
             formData.append('stock_actual', document.getElementById('stock_actual').value);
             formData.append('stock_minimo', document.getElementById('stock_minimo').value);
-            
+
             // Agregar imagen si existe
             const imagenFile = document.getElementById('imagen_file').files[0];
             if (imagenFile) {
@@ -518,22 +524,22 @@
             } else if (document.getElementById('imagen_url').value) {
                 formData.append('imagen_url', document.getElementById('imagen_url').value);
             }
-            
+
             // Validaciones básicas
             if (!formData.get('nombre') || !formData.get('precio')) {
                 alert('Nombre y precio son obligatorios');
                 return;
             }
-            
-            // Usar la ruta correcta: /api/admin/products
-            const url = productoId ? 
-                `http://localhost:3000/api/admin/products/${productoId}` : 
-                'http://localhost:3000/api/admin/products';
-            
+
+            // Usar la ruta correcta: /api/products
+            const url = productoId ?
+                `http://localhost:3000/api/products/${productoId}` :
+                'http://localhost:3000/api/products';
+
             const metodo = productoId ? 'PUT' : 'POST';
-            
+
             console.log('Enviando datos a:', url, 'método:', metodo);
-            
+
             fetch(url, {
                 method: metodo,
                 headers: {
@@ -542,27 +548,27 @@
                 },
                 body: formData
             })
-            .then(response => {
-                console.log('Respuesta recibida, status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Datos recibidos:', data);
-                if (data.success) {
-                    alert(data.message);
-                    cargarProductos();
-                    bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error completo:', error);
-                alert('Error al guardar el producto: ' + error.message);
-            });
+                .then(response => {
+                    console.log('Respuesta recibida, status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Datos recibidos:', data);
+                    if (data.success) {
+                        alert(data.message);
+                        cargarProductos();
+                        bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error completo:', error);
+                    alert('Error al guardar el producto: ' + error.message);
+                });
         }
 
         // Editar producto
@@ -572,13 +578,13 @@
                 alert('Solo los administradores pueden editar productos');
                 return;
             }
-            
+
             fetch(`http://localhost:3000/api/products/${id}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.producto) {
                         const producto = data.producto;
-                        
+
                         document.getElementById('modalTitulo').textContent = 'Editar Producto';
                         document.getElementById('productoId').value = producto.id;
                         document.getElementById('nombre').value = producto.nombre;
@@ -589,12 +595,12 @@
                         document.getElementById('categoria_id').value = producto.categoria_id || '';
                         document.getElementById('stock_actual').value = producto.stock_actual;
                         document.getElementById('stock_minimo').value = producto.stock_minimo;
-                        
+
                         // Manejar la imagen - NO convertir a URL completa aquí
                         // El backend manejará la conversión
                         let imagenUrl = producto.imagen_url || '';
                         document.getElementById('imagen_url').value = imagenUrl;
-                        
+
                         // Mostrar preview si hay imagen
                         const preview = document.getElementById('imagen_preview');
                         if (imagenUrl) {
@@ -606,7 +612,7 @@
                         } else {
                             preview.innerHTML = '';
                         }
-                        
+
                         const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
                         modal.show();
                     }
@@ -619,31 +625,31 @@
                 alert('Solo los administradores pueden eliminar productos');
                 return;
             }
-            
+
             if (!confirm('¿Está seguro de eliminar este producto? Se desactivará pero no se borrarán los registros.')) {
                 return;
             }
-            
+
             // Usar la ruta correcta: /api/admin/products/id
-            fetch(`http://localhost:3000/api/admin/products/${id}`, {
+            fetch(`http://localhost:3000/api/products/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    cargarProductos();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al eliminar el producto');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        cargarProductos();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el producto');
+                });
         }
 
         // Ver detalles del producto
@@ -653,13 +659,13 @@
                 .then(data => {
                     if (data.success && data.producto) {
                         const producto = data.producto;
-                        
+
                         // Construir URL completa para la imagen
                         let imagenUrl = producto.imagen_url;
                         if (imagenUrl && !imagenUrl.startsWith('http')) {
                             imagenUrl = 'http://localhost:3000' + imagenUrl;
                         }
-                        
+
                         // Llenar el modal con los datos
                         document.getElementById('detallesTitulo').textContent = `Detalles: ${producto.nombre}`;
                         document.getElementById('detallesId').textContent = producto.id;
@@ -671,7 +677,7 @@
                         document.getElementById('detallesColor').textContent = producto.color || 'No especificado';
                         document.getElementById('detallesStockActual').textContent = producto.stock_actual;
                         document.getElementById('detallesStockMinimo').textContent = producto.stock_minimo;
-                        
+
                         // Estado del stock
                         let estado = '';
                         if (producto.stock_bajo) {
@@ -682,7 +688,7 @@
                             estado = '<span class="badge bg-danger">Agotado</span>';
                         }
                         document.getElementById('detallesEstado').innerHTML = estado;
-                        
+
                         // Fecha (si existe el campo)
                         if (producto.created_at || producto.fecha_creacion) {
                             const fecha = producto.created_at || producto.fecha_creacion;
@@ -690,7 +696,7 @@
                         } else {
                             document.getElementById('detallesFecha').textContent = 'No disponible';
                         }
-                        
+
                         // Imagen
                         const imagenContainer = document.getElementById('detallesImagen');
                         if (imagenUrl) {
@@ -707,19 +713,19 @@
                                 </div>
                             `;
                         }
-                        
+
                         // Configurar botón de editar (solo para administradores)
                         const btnEditar = document.getElementById('btnEditarDesdeDetalles');
                         if (usuario.rol === 'Administrador') {
                             btnEditar.style.display = 'block';
-                            btnEditar.onclick = function() {
+                            btnEditar.onclick = function () {
                                 bootstrap.Modal.getInstance(document.getElementById('modalDetalles')).hide();
                                 setTimeout(() => editarProducto(id), 300);
                             };
                         } else {
                             btnEditar.style.display = 'none';
                         }
-                        
+
                         // Mostrar el modal
                         const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
                         modal.show();
@@ -734,24 +740,25 @@
         }
 
         // Filtrar productos
-        document.getElementById('buscarProducto').addEventListener('input', function(e) {
+        document.getElementById('buscarProducto').addEventListener('input', function (e) {
             const texto = e.target.value.toLowerCase();
             const categoriaId = document.getElementById('filtroCategoria').value;
-            
+
             const filtrados = productos.filter(producto => {
-                const coincideTexto = producto.nombre.toLowerCase().includes(texto) || 
-                                     (producto.descripcion && producto.descripcion.toLowerCase().includes(texto));
+                const coincideTexto = producto.nombre.toLowerCase().includes(texto) ||
+                    (producto.descripcion && producto.descripcion.toLowerCase().includes(texto));
                 const coincideCategoria = !categoriaId || producto.categoria_id == categoriaId;
-                
+
                 return coincideTexto && coincideCategoria;
             });
-            
+
             mostrarProductos(filtrados);
         });
-        
-        document.getElementById('filtroCategoria').addEventListener('change', function() {
+
+        document.getElementById('filtroCategoria').addEventListener('change', function () {
             document.getElementById('buscarProducto').dispatchEvent(new Event('input'));
         });
     </script>
 </body>
+
 </html>

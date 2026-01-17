@@ -211,3 +211,42 @@ INSERT INTO categorias (nombre, descripcion) VALUES
 USE loopme;
 ALTER TABLE productos MODIFY COLUMN talla VARCHAR(50) NULL;
 ALTER TABLE productos MODIFY COLUMN color VARCHAR(50) NULL;
+
+DROP TRIGGER IF EXISTS tr_mark_low_stock;
+
+-- Desactivar restricciones de clave foránea temporalmente
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Borrar todos los productos (esto también borrará inventario por CASCADE)
+TRUNCATE TABLE productos;
+
+-- Borrar manualmente inventario por si acaso
+TRUNCATE TABLE inventario;
+
+-- Borrar alertas de stock
+TRUNCATE TABLE alertas_stock;
+
+-- Borrar categorías (opcional - si quieres empezar de cero)
+TRUNCATE TABLE categorias;
+-- Luego inserta las categorías básicas de nuevo:
+INSERT INTO categorias (nombre, descripcion) VALUES
+('Camisetas', 'Camisetas básicas, estampadas y de diferentes estilos'),
+('Pantalones', 'Jeans, chinos, leggings y otros tipos de pantalones'),
+('Vestidos', 'Vestidos casuales, de fiesta y de verano'),
+('Chaquetas', 'Chaquetas, abrigos y blazers'),
+('Sudaderas', 'Hoodies y sudaderas casuales'),
+('Faldas', 'Faldas de diferentes largos y estilos'),
+('Ropa Interior', 'Ropa interior y prendas básicas'),
+('Accesorios', 'Bolsos, cinturones, gorros y otros accesorios'),
+('Calzado', 'Zapatos, zapatillas y sandalias'),
+('Trajes de Baño', 'Bikinis y bañadores'),
+('Ropa Deportiva', 'Leggings, tops y prendas para entrenamiento');
+
+-- Reactivar restricciones de clave foránea
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Verificar que está vacío
+SELECT COUNT(*) as total_productos FROM productos;
+SELECT COUNT(*) as total_inventario FROM inventario;
+SELECT * FROM clientes;
+TRUNCATE TABLE clientes;

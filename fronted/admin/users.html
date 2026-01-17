@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/public.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -33,7 +35,6 @@
                             <i class="fas fa-tshirt"></i> Productos e Inventario
                         </a>
                     </li>
-                   
                     <li class="nav-item">
                         <a class="nav-link" href="pedidos.html">
                             <i class="fas fa-shopping-cart"></i> Pedidos
@@ -63,7 +64,7 @@
                 </h4>
             </div>
             <div class="card-body">
-                
+
                 <!-- Formulario para crear usuario -->
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -74,41 +75,41 @@
                                     <label class="form-label">Nombre *</label>
                                     <input type="text" id="nombre" class="form-control" placeholder="Nombre">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Apellido</label>
                                     <input type="text" id="apellido" class="form-control" placeholder="Apellido">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Email *</label>
                                     <input type="email" id="email" class="form-control" placeholder="email@ejemplo.com">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Contraseña *</label>
                                     <input type="password" id="password" class="form-control" placeholder="Contraseña">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Rol *</label>
                                     <select id="rol" class="form-control">
                                         <option value="Administrador">Administrador</option>
                                     </select>
                                 </div>
-                                
+
                                 <button onclick="crearUsuario()" class="btn btn-primary w-100">
                                     <i class="fas fa-user-plus me-2"></i>Registrar Usuario
                                 </button>
-                                
+
                                 <p id="mensajeCreacion" class="mt-2 text-center"></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <hr>
-                
+
                 <!-- Tabla de usuarios -->
                 <h5>Usuarios Registrados</h5>
                 <div class="table-responsive">
@@ -140,7 +141,7 @@
         let usuario = null;
 
         // Verificar autenticación al cargar
-        window.onload = function() {
+        window.onload = function () {
             verificarAutenticacion();
             cargarUsuarios();
         };
@@ -149,39 +150,39 @@
         function verificarAutenticacion() {
             token = localStorage.getItem("token");
             const userData = localStorage.getItem("user");
-            
+
             if (!token || !userData) {
                 window.location.href = "login.html";
                 return;
             }
-            
+
             usuario = JSON.parse(userData);
-            
+
             // Verificar que sea administrador
             if (usuario.rol !== "Administrador") {
                 alert("Acceso denegado. Solo los administradores pueden gestionar usuarios.");
                 window.location.href = "dashboard.html";
                 return;
             }
-            
+
             // Verificar token con el servidor
             fetch("http://localhost:3000/api/auth/verify", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "login.html";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
                     window.location.href = "login.html";
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                window.location.href = "login.html";
-            });
+                });
         }
 
         // Cerrar sesión
@@ -196,42 +197,42 @@
         // Cargar usuarios desde la API
         function cargarUsuarios() {
             fetch("http://localhost:3000/api/admin/users", {
-                headers: { 
-                    "Authorization": `Bearer ${token}` 
+                headers: {
+                    "Authorization": `Bearer ${token}`
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.users) {
-                    mostrarUsuarios(data.users);
-                } else {
-                    document.getElementById("tablaUsuarios").innerHTML = 
-                        `<tr><td colspan="6" class="text-center">No hay usuarios registrados</td></tr>`;
-                }
-            })
-            .catch(error => {
-                console.error("Error cargando usuarios:", error);
-                document.getElementById("tablaUsuarios").innerHTML = 
-                    `<tr><td colspan="6" class="text-center text-danger">Error al cargar usuarios</td></tr>`;
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.users) {
+                        mostrarUsuarios(data.users);
+                    } else {
+                        document.getElementById("tablaUsuarios").innerHTML =
+                            `<tr><td colspan="6" class="text-center">No hay usuarios registrados</td></tr>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error cargando usuarios:", error);
+                    document.getElementById("tablaUsuarios").innerHTML =
+                        `<tr><td colspan="6" class="text-center text-danger">Error al cargar usuarios</td></tr>`;
+                });
         }
 
         // Mostrar usuarios en la tabla
         function mostrarUsuarios(usuarios) {
             const tbody = document.getElementById("tablaUsuarios");
-            
+
             if (usuarios.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay usuarios registrados</td></tr>`;
                 return;
             }
-            
+
             let html = "";
-            
+
             usuarios.forEach(user => {
-                const estado = user.activo ? 
-                    '<span class="badge bg-success">Activo</span>' : 
+                const estado = user.activo ?
+                    '<span class="badge bg-success">Activo</span>' :
                     '<span class="badge bg-danger">Inactivo</span>';
-                
+
                 html += `
                     <tr>
                         <td>${user.id}</td>
@@ -250,7 +251,7 @@
                     </tr>
                 `;
             });
-            
+
             tbody.innerHTML = html;
         }
 
@@ -261,14 +262,14 @@
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
             const rol = document.getElementById("rol").value;
-            
+
             // Validaciones básicas
             if (!nombre || !email || !password || !rol) {
-                document.getElementById("mensajeCreacion").innerHTML = 
+                document.getElementById("mensajeCreacion").innerHTML =
                     '<span class="text-danger">Todos los campos marcados con * son obligatorios</span>';
                 return;
             }
-            
+
             const datos = {
                 nombre,
                 apellido,
@@ -276,7 +277,7 @@
                 password,
                 rol
             };
-            
+
             fetch("http://localhost:3000/api/admin/users", {
                 method: "POST",
                 headers: {
@@ -285,36 +286,36 @@
                 },
                 body: JSON.stringify(datos)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Limpiar formulario
-                    document.getElementById("nombre").value = '';
-                    document.getElementById("apellido").value = '';
-                    document.getElementById("email").value = '';
-                    document.getElementById("password").value = '';
-                    
-                    // Mostrar mensaje
-                    document.getElementById("mensajeCreacion").innerHTML = 
-                        '<span class="text-success">Usuario creado exitosamente</span>';
-                    
-                    // Recargar tabla
-                    cargarUsuarios();
-                    
-                    // Ocultar mensaje después de 3 segundos
-                    setTimeout(() => {
-                        document.getElementById("mensajeCreacion").innerHTML = '';
-                    }, 3000);
-                } else {
-                    document.getElementById("mensajeCreacion").innerHTML = 
-                        `<span class="text-danger">Error: ${data.message}</span>`;
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                document.getElementById("mensajeCreacion").innerHTML = 
-                    '<span class="text-danger">Error al crear usuario</span>';
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Limpiar formulario
+                        document.getElementById("nombre").value = '';
+                        document.getElementById("apellido").value = '';
+                        document.getElementById("email").value = '';
+                        document.getElementById("password").value = '';
+
+                        // Mostrar mensaje
+                        document.getElementById("mensajeCreacion").innerHTML =
+                            '<span class="text-success">Usuario creado exitosamente</span>';
+
+                        // Recargar tabla
+                        cargarUsuarios();
+
+                        // Ocultar mensaje después de 3 segundos
+                        setTimeout(() => {
+                            document.getElementById("mensajeCreacion").innerHTML = '';
+                        }, 3000);
+                    } else {
+                        document.getElementById("mensajeCreacion").innerHTML =
+                            `<span class="text-danger">Error: ${data.message}</span>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    document.getElementById("mensajeCreacion").innerHTML =
+                        '<span class="text-danger">Error al crear usuario</span>';
+                });
         }
 
         // Cambiar estado del usuario (activar/desactivar)
@@ -322,7 +323,7 @@
             if (!confirm(`¿Está seguro de ${estado ? 'activar' : 'desactivar'} este usuario?`)) {
                 return;
             }
-            
+
             fetch(`http://localhost:3000/api/admin/users/${id}/status`, {
                 method: "PATCH",
                 headers: {
@@ -331,20 +332,21 @@
                 },
                 body: JSON.stringify({ estado: estado ? 1 : 0 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    cargarUsuarios();
-                } else {
-                    alert("Error: " + data.message);
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Error al cambiar estado del usuario");
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        cargarUsuarios();
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Error al cambiar estado del usuario");
+                });
         }
     </script>
 </body>
+
 </html>

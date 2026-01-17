@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,22 +12,25 @@
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/public.css">
     <style>
         .stat-card {
             transition: transform 0.3s;
             border-radius: 10px;
             color: white;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
         }
+
         .stat-icon {
             font-size: 2.5rem;
             opacity: 0.8;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -49,17 +53,13 @@
                             <i class="fas fa-tshirt"></i> Productos e Inventario
                         </a>
                     </li>
-                    
+
                     <li class="nav-item">
                         <a class="nav-link" href="pedidos.html">
                             <i class="fas fa-shopping-cart"></i> Pedidos
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="pagos.html">
-                            <i class="fas fa-credit-card"></i> Pagos
-                        </a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="users.html">
                             <i class="fas fa-users"></i> Usuarios
@@ -71,8 +71,8 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="#" onclick="logout()">
-                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                            </a></li>
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                </a></li>
                         </ul>
                     </li>
                 </ul>
@@ -166,15 +166,15 @@
                     <div class="card-body">
                         <div class="alert alert-warning" role="alert">
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            <strong>Stock bajo:</strong> Camiseta básica blanca (5 unidades)
+                            <strong>Stock bajo:</strong> Actualmente no posee Alertas
                         </div>
                         <div class="alert alert-danger" role="alert">
                             <i class="fas fa-times-circle me-2"></i>
-                            <strong>Producto agotado:</strong> Jeans azul ajustado
+                            <strong>Producto agotado:</strong>
                         </div>
                         <div class="alert alert-info" role="alert">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Nuevo pedido:</strong> #ORD-00123 recibido
+                            <strong>Nuevo pedido:</strong> Sin pedidos actuales
                         </div>
                     </div>
                 </div>
@@ -200,11 +200,7 @@
                                     <i class="fas fa-cash-register me-2"></i>Registrar Venta
                                 </a>
                             </div>
-                            <div class="col-md-3 mb-2">
-                                <a href="inventario.html" class="btn btn-warning w-100">
-                                    <i class="fas fa-boxes me-2"></i>Ver Inventario
-                                </a>
-                            </div>
+
                             <div class="col-md-3 mb-2">
                                 <a href="users.html" class="btn btn-info w-100">
                                     <i class="fas fa-user-plus me-2"></i>Agregar Usuario
@@ -225,7 +221,7 @@
         let token = null;
 
         // Verificar autenticación al cargar
-        window.onload = function() {
+        window.onload = function () {
             verificarAutenticacion();
             cargarEstadisticas();
             inicializarGrafico();
@@ -235,29 +231,29 @@
         function verificarAutenticacion() {
             token = localStorage.getItem("token");
             const userData = localStorage.getItem("user");
-            
+
             if (!token || !userData) {
                 window.location.href = "login.html";
                 return;
             }
-            
+
             usuario = JSON.parse(userData);
-            
+
             // Mostrar información del usuario
             document.getElementById("userName").textContent = usuario.nombre;
             document.getElementById("welcomeName").textContent = usuario.nombre;
-            
+
             // Mensaje personalizado según rol
             const mensajes = {
                 'Administrador': 'Tienes acceso completo al sistema.'
             };
 
-            document.getElementById("welcomeMessage").textContent = 
+            document.getElementById("welcomeMessage").textContent =
                 `Rol: ${usuario.rol}. ${mensajes[usuario.rol] || ''}`;
-            
+
             // Mostrar última conexión
             const ahora = new Date();
-            document.getElementById("lastLogin").textContent = 
+            document.getElementById("lastLogin").textContent =
                 `Última conexión: ${ahora.toLocaleDateString()} ${ahora.toLocaleTimeString()}`;
         }
 
@@ -272,55 +268,69 @@
 
         // Cargar estadísticas
         function cargarEstadisticas() {
-            // Simular datos (luego se conectarán con el backend)
-            document.getElementById("totalProductos").textContent = "24";
-            document.getElementById("totalVentas").textContent = "8";
-            document.getElementById("stockBajo").textContent = "3";
-            document.getElementById("totalClientes").textContent = "15";
+            fetch("http://localhost:3000/api/reports/dashboard-stats", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.stats;
+                        document.getElementById("totalProductos").textContent = stats.totalProductos;
+                        document.getElementById("totalVentas").textContent = `$${parseFloat(stats.ventasHoy).toFixed(2)}`;
+                        document.getElementById("stockBajo").textContent = stats.stockBajo;
+                        document.getElementById("totalClientes").textContent = stats.totalClientes;
+                    }
+                })
+                .catch(err => console.error("Error cargando estadísticas:", err));
         }
 
         // Inicializar gráfico de ventas
         function inicializarGrafico() {
             const ctx = document.getElementById('ventasChart').getContext('2d');
-            
-            // Datos de ejemplo
-            const ventasChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                    datasets: [{
-                        label: 'Ventas ($)',
-                        data: [120, 190, 300, 250, 220, 400, 350],
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value;
+
+            fetch("http://localhost:3000/api/reports/sales-chart", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) return;
+
+                    const chartData = data.chartData;
+                    const labels = chartData.map(d => d.fecha);
+                    const values = chartData.map(d => d.total);
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Ventas ($)',
+                                data: values,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 2,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: true } },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { callback: function (value) { return '$' + value; } }
                                 }
                             }
                         }
-                    }
-                }
-            });
+                    });
+                })
+                .catch(err => console.error("Error cargando gráfico:", err));
         }
 
         // Actualizar datos cada 30 segundos
         setInterval(cargarEstadisticas, 30000);
     </script>
 </body>
+
 </html>

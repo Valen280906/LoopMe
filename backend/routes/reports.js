@@ -1,103 +1,95 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const verifyToken = require("../middleware/auth");
+const isAdmin = require("../middleware/isAdmin");
 
-// Reporte de ventas por período
-router.get("/ventas", (req, res) => {
-    const { fecha_inicio, fecha_fin } = req.query;
-    
-    let sql = `
-        SELECT DATE(p.fecha_pedido) as fecha, 
-               COUNT(*) as total_pedidos,
-               SUM(p.total) as total_ventas,
-               AVG(p.total) as ticket_promedio
-        FROM pedidos p
-        WHERE p.estado NOT IN ('Cancelado')
-    `;
-    
-    const params = [];
-    
-    if(fecha_inicio && fecha_fin) {
-        sql += " AND DATE(p.fecha_pedido) BETWEEN ? AND ?";
-        params.push(fecha_inicio, fecha_fin);
+// Middleware de seguridad para todas las rutas de reportes
+router.use(verifyToken, isAdmin);
+
+// Obtener estadísticas principales del dashboard
+router.get("/dashboard-stats", async (req, res) => {
+    try {
+        const connection = db.promise();
+
+        // 1. Total Productos
+        const [prodRows] = await connection.query("SELECT COUNT(*) as total FROM productos WHERE activo = 1");
+
+        // 2. Ventas de Hoy
+        const [salesRows] = await connection.query(`
+            SELECT SUM(total) as total 
+            FROM pedidos 
+            WHERE DATE(fecha_pedido) = CURDATE() 
+            AND estado != 'Cancelado'
+        `);
+
+        // 3. Alertas de Stock Bajo
+        const [stockRows] = await connection.query("SELECT COUNT(*) as total FROM inventario WHERE stock_bajo = 1");
+
+        // 4. Clientes Registrados
+        const [clientRows] = await connection.query("SELECT COUNT(*) as total FROM clientes");
+
+        res.json({
+            success: true,
+            stats: {
+                totalProductos: prodRows[0].total,
+                ventasHoy: salesRows[0].total || 0,
+                stockBajo: stockRows[0].total,
+                totalClientes: clientRows[0].total
+            }
+        });
+
+    } catch (error) {
+        console.error("Error obteniendo estadísticas:", error);
+        res.status(500).json({ success: false, message: "Error al obtener estadísticas" });
     }
-    
-    sql += " GROUP BY DATE(p.fecha_pedido) ORDER BY fecha DESC";
-    
-    db.query(sql, params, (err, results) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error al generar reporte" 
-            });
-        }
-        
-        res.json({ success: true, ventas: results });
-    });
 });
 
-// Productos más vendidos
-router.get("/top-productos", (req, res) => {
-    const { limite = 10 } = req.query;
-    
-    const sql = `
-        SELECT p.nombre, 
-               SUM(dp.cantidad) as cantidad_vendida,
-               SUM(dp.subtotal) as total_recaudado,
-               pr.nombre as categoria
-        FROM detalles_pedido dp
-        JOIN productos p ON dp.producto_id = p.id
-        LEFT JOIN categorias pr ON p.categoria_id = pr.id
-        JOIN pedidos pe ON dp.pedido_id = pe.id
-        WHERE pe.estado NOT IN ('Cancelado')
-        GROUP BY dp.producto_id
-        ORDER BY cantidad_vendida DESC
-        LIMIT ?
-    `;
-    
-    db.query(sql, [parseInt(limite)], (err, results) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error al obtener productos más vendidos" 
-            });
-        }
-        
-        res.json({ success: true, productos: results });
-    });
-});
+// Obtener datos para el gráfico de ventas (últimos 7 días)
+router.get("/sales-chart", async (req, res) => {
+    try {
+        const sql = `
+            SELECT DATE(fecha_pedido) as fecha, SUM(total) as total
+            FROM pedidos
+            WHERE fecha_pedido >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            AND estado != 'Cancelado'
+            GROUP BY DATE(fecha_pedido)
+            ORDER BY fecha ASC
+        `;
 
-// Reporte de inventario
-router.get("/inventario", (req, res) => {
-    const sql = `
-        SELECT p.nombre, p.precio,
-               i.stock_actual, i.stock_minimo, i.stock_bajo,
-               CASE 
-                   WHEN i.stock_actual <= 0 THEN 'Agotado'
-                   WHEN i.stock_actual <= i.stock_minimo THEN 'Stock Bajo'
-                   ELSE 'Disponible'
-               END as estado,
-               i.ultima_actualizacion,
-               (i.stock_actual * p.precio) as valor_total
-        FROM productos p
-        JOIN inventario i ON p.id = i.producto_id
-        WHERE p.activo = 1
-        ORDER BY i.stock_actual ASC
-    `;
-    
-    db.query(sql, (err, results) => {
-        if(err) {
-            console.error(err);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error al generar reporte de inventario" 
+        const [rows] = await db.promise().query(sql);
+
+        // Formatear datos para el frontend
+        // Asegurarnos de tener los últimos 7 días aunque no haya ventas
+        const result = [];
+        const today = new Date();
+
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+
+            const found = rows.find(r => {
+                // Manejar tanto objeto Date como string dependiendo del driver
+                const rowDate = r.fecha instanceof Date ? r.fecha.toISOString().split('T')[0] : r.fecha;
+                return rowDate === dateStr;
+            });
+
+            result.push({
+                fecha: date.toLocaleDateString('es-ES', { weekday: 'short' }), // Ej: "lun"
+                total: found ? parseFloat(found.total) : 0
             });
         }
-        
-        res.json({ success: true, inventario: results });
-    });
+
+        res.json({
+            success: true,
+            chartData: result
+        });
+
+    } catch (error) {
+        console.error("Error obteniendo datos del gráfico:", error);
+        res.status(500).json({ success: false, message: "Error al obtener datos del gráfico" });
+    }
 });
 
 module.exports = router;

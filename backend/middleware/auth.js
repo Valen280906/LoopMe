@@ -1,35 +1,35 @@
 const jwt = require("jsonwebtoken");
-const SECRET = "LOOPME_SUPER_SECRET";
+const SECRET = process.env.JWT_SECRET || "LOOPME_SUPER_SECRET";
 
-function authMiddleware(req, res, next){
+function authMiddleware(req, res, next) {
 
     const authHeader = req.headers["authorization"];
 
-    if(!authHeader){
+    if (!authHeader) {
         return res.status(401).json({
-            success:false,
-            message:"Token requerido"
+            success: false,
+            message: "Token requerido"
         });
     }
 
     const token = authHeader.split(" ")[1]; // Bearer TOKEN
 
-    if(!token){
+    if (!token) {
         return res.status(401).json({
-            success:false,
-            message:"Token inválido"
+            success: false,
+            message: "Token inválido"
         });
     }
 
-    try{
+    try {
         const decoded = jwt.verify(token, SECRET);
         req.user = decoded;
         next();
 
-    }catch{
+    } catch {
         return res.status(401).json({
-            success:false,
-            message:"Token inválido o expirado"
+            success: false,
+            message: "Token inválido o expirado"
         });
     }
 }

@@ -1,13 +1,44 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Pedidos - LoopMe</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/styles.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="../css/public.css">
+    <style>
+        .badge-pendiente {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .badge-pagado {
+            background-color: #17a2b8;
+            color: #fff;
+        }
+
+        .badge-enviado {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .badge-entregado {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .badge-cancelado {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -40,49 +71,77 @@
                             <i class="fas fa-users"></i> Usuarios
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <button class="btn btn-outline-light btn-sm" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i> Salir
-                        </button>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> <span id="userName">Admin</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                </a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- Contenido principal -->
     <div class="container-fluid mt-4">
         <div class="card">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
-                    <i class="fas fa-shopping-cart me-2"></i>Gestión de Pedidos
+                    <i class="fas fa-clipboard-list me-2"></i>Gestión de Pedidos
                 </h4>
+                <button class="btn btn-light btn-sm" onclick="cargarPedidos()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Módulo de pedidos en desarrollo. Próximamente podrás:
-                    <ul class="mb-0 mt-2">
-                        <li>Registrar nuevas ventas</li>
-                        <li>Ver historial de pedidos</li>
-                        <li>Actualizar estados de pedidos</li>
-                        <li>Generar comprobantes de venta</li>
-                    </ul>
-                </div>
-                
-                <div class="text-center py-5">
-                    <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
-                    <h5>Módulo en construcción</h5>
-                    <p class="text-muted">Estamos trabajando para ofrecerte las mejores herramientas de gestión.</p>
-                    <a href="dashboard.html" class="btn btn-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Volver al Dashboard
-                    </a>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaPedidos">
+                            <tr>
+                                <td colspan="6" class="text-center">Cargando pedidos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let token = null;
+
+        window.onload = function () {
+            verificarAutenticacion();
+            cargarPedidos();
+        };
+
+        function verificarAutenticacion() {
+            token = localStorage.getItem("token");
+            const user = JSON.parse(localStorage.getItem("user") || '{}');
+
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+            document.getElementById('userName').textContent = user.nombre || 'Admin';
+        }
+
         function logout() {
             if (confirm("¿Está seguro de cerrar sesión?")) {
                 localStorage.removeItem("token");
@@ -90,6 +149,88 @@
                 window.location.href = "login.html";
             }
         }
+
+        function cargarPedidos() {
+            fetch("/api/orders", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById("tablaPedidos");
+                    if (!data.success || !data.pedidos || data.pedidos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay pedidos registrados</td></tr>';
+                        return;
+                    }
+
+                    let html = "";
+                    data.pedidos.forEach(p => {
+                        const fecha = new Date(p.fecha_pedido).toLocaleDateString() + ' ' + new Date(p.fecha_pedido).toLocaleTimeString();
+                        let badgeClass = "badge-secondary";
+                        switch (p.estado) {
+                            case 'Pendiente': badgeClass = "badge-pendiente"; break;
+                            case 'Pagado': badgeClass = "badge-pagado"; break; // Backend creates as 'Pendiente' then payment confirms? Wait, checkout creates as 'Pendiente' but payments logic in createOrder updates it? No, checkout calls /create-order. Let's assume stats.
+                            case 'Enviado': badgeClass = "badge-enviado"; break;
+                            case 'Entregado': badgeClass = "badge-entregado"; break;
+                            case 'Cancelado': badgeClass = "badge-cancelado"; break;
+                        }
+
+                        // Logic for actions
+                        let acciones = '';
+                        if (p.estado === 'Pendiente' || p.estado === 'Pagado') { // Assuming 'Pagado' is a valid state or 'Pendiente' after payment
+                            // Check backend logic: create-order sets 'Pendiente'. 
+                            // But if payment succeeded, it might be logically 'Pagado' but DB says 'Pendiente'.
+                            // Let's allow 'Enviar' if it's not canceled/delivered.
+                            acciones += `<button class="btn btn-primary btn-sm" onclick="cambiarEstado(${p.id}, 'Enviado')">
+                                        <i class="fas fa-truck"></i> Enviar
+                                      </button>`;
+                        } else if (p.estado === 'Enviado') {
+                            acciones = '<span class="text-muted"><i class="fas fa-check"></i> Enviado</span>';
+                        } else if (p.estado === 'Entregado') {
+                            acciones = '<span class="text-success"><i class="fas fa-check-double"></i> Completado</span>';
+                        }
+
+                        html += `
+                        <tr>
+                            <td>#${p.id}</td>
+                            <td>${fecha}</td>
+                            <td>${p.cliente_nombre || 'N/A'} ${p.cliente_apellido || ''}</td>
+                            <td>$${parseFloat(p.total).toFixed(2)}</td>
+                            <td><span class="badge ${badgeClass}">${p.estado}</span></td>
+                            <td>${acciones}</td>
+                        </tr>
+                    `;
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById("tablaPedidos").innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar pedidos</td></tr>';
+                });
+        }
+
+        function cambiarEstado(id, nuevoEstado) {
+            if (!confirm(`¿Marcar el pedido #${id} como ${nuevoEstado}?`)) return;
+
+            fetch(`/api/orders/${id}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Estado actualizado correctamente');
+                        cargarPedidos();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(err => alert('Error de conexión'));
+        }
     </script>
 </body>
+
 </html>
