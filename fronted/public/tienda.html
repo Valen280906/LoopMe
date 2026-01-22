@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* Estilos adicionales específicos para tienda.html */
         .placeholder-banner {
@@ -102,6 +104,32 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 0.25rem rgba(118, 75, 162, 0.25);
         }
+        
+        /* Botón de favoritos en tarjeta */
+        .btn-favorite {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            z-index: 5;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn-favorite:hover {
+            transform: scale(1.1);
+            color: #dc3545;
+        }
+        /* Botón de favoritos en tarjeta (Eliminado estilo antiguo) */
     </style>
 </head>
 <body>
@@ -130,9 +158,11 @@
                         <a class="nav-link nav-link-loopme dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-list"></i> Categorías
                         </a>
-                        <ul class="dropdown-menu" id="categoriesDropdown">
-                            <!-- Categorías se cargarán dinámicamente -->
-                        </ul>
+                            <ul class="dropdown-menu" id="categoriesDropdown">
+                                <li><a class="dropdown-item" href="#" onclick="filtrarPorCategoria('')">Todas las categorías</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- Categorías se cargarán dinámicamente -->
+                            </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-loopme" href="carrito.html">
@@ -260,12 +290,12 @@
                 </div>
                 <div class="col-lg-2 col-md-4 mb-4">
                     <div class="footer-links">
-                        <h5>Comprar</h5>
+                        <h5>Navegación</h5>
                         <ul>
-                            <li><a href="#">Mujer</a></li>
-                            <li><a href="#">Hombre</a></li>
-                            <li><a href="#">Niños</a></li>
-                            <li><a href="#">Ofertas</a></li>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -275,8 +305,7 @@
                         <ul>
                             <li><a href="#">Sobre Nosotros</a></li>
                             <li><a href="#">Contacto</a></li>
-                            <li><a href="#">Políticas</a></li>
-                            <li><a href="#">Términos</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -299,6 +328,64 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Políticas y Términos -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica del modal de términos
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            // Opcional: Guardar en localStorage que aceptó
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
     <script>
         // Variables globales
         let allProducts = [];
@@ -344,6 +431,18 @@
             }
         }
 
+        // Helper to get user-scoped key
+        function getUserKey(baseKey) {
+            const clienteInfo = localStorage.getItem("cliente_info");
+            if (!clienteInfo) return baseKey;
+            try {
+                const cliente = JSON.parse(clienteInfo);
+                return cliente.email ? `${baseKey}_${cliente.email}` : baseKey;
+            } catch(e) {
+                return baseKey;
+            }
+        }
+
         // Menú desplegable para usuario autenticado
         function mostrarMenuUsuario() {
             if (!clienteAutenticado) return;
@@ -361,10 +460,10 @@
                     <a class="dropdown-item" href="pedidos.html">
                         <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="favoritos.html">
                         <i class="fas fa-heart me-2"></i>Favoritos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="perfil.html">
                         <i class="fas fa-user-edit me-2"></i>Mi Perfil
                     </a>
                     <div class="dropdown-divider"></div>
@@ -400,11 +499,22 @@
 
         // Cerrar sesión de cliente
         function logoutCliente() {
-            if (confirm("¿Estás seguro de cerrar sesión?")) {
-                localStorage.removeItem("cliente_token");
-                localStorage.removeItem("cliente_info");
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "Esperamos verte pronto por LoopMe",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
         }
 
         // Cargar categorías
@@ -417,7 +527,11 @@
                         
                         // Llenar dropdown de navegación
                         const categoriesDropdown = document.getElementById("categoriesDropdown");
-                        let dropdownHTML = '';
+                        // Mantener la opción "Todas" y el separador
+                        let dropdownHTML = `
+                            <li><a class="dropdown-item" href="#" onclick="filtrarPorCategoria('')">Todas las categorías</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                        `;
                         allCategories.forEach(categoria => {
                             dropdownHTML += `
                                 <li><a class="dropdown-item" href="#" onclick="filtrarPorCategoria(${categoria.id})">
@@ -508,12 +622,21 @@
                 const carrito = JSON.parse(localStorage.getItem("carrito") || "[]");
                 const enCarrito = carrito.some(item => item.id === producto.id);
                 
+                // Verificar favoritos (Scoped to User)
+                const favoritos = JSON.parse(localStorage.getItem(getUserKey("loopme_favorites")) || "[]");
+                const esFavorito = favoritos.some(fav => fav.id === producto.id);
+                const heartClass = esFavorito ? "fas text-warning" : "far";
+
                 html += `
                     <div class="col-lg-3 col-md-4 col-sm-6">
                         <div class="card product-card">
                             <div class="product-img-container">
                                 ${producto.stock_bajo ? '<div class="product-badge">Últimas unidades</div>' : ''}
                                 ${producto.stock_actual <= 0 ? '<div class="product-badge bg-danger">Agotado</div>' : ''}
+                                
+                                ${producto.stock_bajo ? '<div class="product-badge">Últimas unidades</div>' : ''}
+                                ${producto.stock_actual <= 0 ? '<div class="product-badge bg-danger">Agotado</div>' : ''}
+                                
                                 <img src="${imagenUrl || 'https://via.placeholder.com/300x300/eee/999?text=Sin+imagen'}" 
                                      class="product-img" 
                                      alt="${producto.nombre}"
@@ -540,13 +663,16 @@
                                             ${producto.stock_actual <= 0 ? 'disabled' : ''}>
                                         <i class="fas fa-eye me-1"></i> Ver
                                     </button>
-                                    <button class="btn ${enCarrito ? 'btn-success' : 'btn-loopme-outline'} btn-sm" 
+                                    <button class="btn ${enCarrito ? 'btn-success' : 'btn-loopme-outline'} btn-sm flex-grow-1" 
                                             onclick="agregarAlCarrito(${producto.id})"
                                             id="btnCart${producto.id}"
                                             ${producto.stock_actual <= 0 ? 'disabled' : ''}>
                                         ${enCarrito ? 
                                             '<i class="fas fa-check me-1"></i> En carrito' : 
                                             '<i class="fas fa-cart-plus me-1"></i> Agregar'}
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm ms-2" onclick="toggleFavorite(${producto.id}, event)" title="${esFavorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                                        <i class="${heartClass} fa-star"></i>
                                     </button>
                                 </div>
                             </div>
@@ -569,12 +695,20 @@
             const producto = allProducts.find(p => p.id === productoId);
             
             if (!producto) {
-                alert("Producto no encontrado");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Producto no encontrado'
+                });
                 return;
             }
             
             if (producto.stock_actual <= 0) {
-                alert("Este producto está agotado");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Agotado',
+                    text: 'Este producto no tiene stock disponible en este momento'
+                });
                 return;
             }
             
@@ -714,9 +848,58 @@
             document.getElementById("filterCategory").value = "";
             document.getElementById("filterPrice").value = "";
             document.getElementById("searchProduct").value = "";
+            
             cargarProductosAleatorios();
         }
 
+        // Función para manejar favoritos (Scoped to User)
+        function toggleFavorite(id, event) {
+            // Evitar que el clic propague al enlace del producto si hubiera uno
+            if(event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            const producto = allProducts.find(p => p.id === id);
+            if (!producto) return;
+            
+            const favoritesKey = getUserKey("loopme_favorites");
+            let favoritos = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+            const index = favoritos.findIndex(f => f.id === id);
+            
+            if (index >= 0) {
+                // Eliminar
+                favoritos.splice(index, 1);
+                // Cambiar icono visualmente
+                const btn = event.currentTarget;
+                const icon = btn.querySelector('i');
+                icon.classList.remove('fas', 'text-warning');
+                icon.classList.add('far');
+                btn.title = 'Agregar a favoritos';
+            } else {
+                // Agregar
+                favoritos.push({
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    imagen_url: producto.imagen_url,
+                    categoria: producto.categoria
+                });
+                
+                // Animación visual
+                const btn = event.currentTarget;
+                const icon = btn.querySelector('i');
+                icon.classList.remove('far');
+                icon.classList.add('fas', 'text-warning');
+                
+                // Efecto de pulso
+                btn.style.transform = "scale(1.2)";
+                setTimeout(() => btn.style.transform = "scale(1)", 200);
+                btn.title = 'Quitar de favoritos';
+            }
+            
+            localStorage.setItem(favoritesKey, JSON.stringify(favoritos));
+        }
         // Mostrar mensaje cuando no hay productos
         function mostrarSinProductos() {
             document.getElementById("loadingProducts").style.display = "none";

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Avanzados - LoopMe Admin</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="../css/public.css">
+    <style>
+        .report-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            max-height: 400px;
+        }
+
+        .badge-stock {
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="dashboard.html">
+                <i class="fas fa-store"></i> LoopMe Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="productos.html">
+                            <i class="fas fa-tshirt"></i> Productos e Inventario
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="pedidos.html">
+                            <i class="fas fa-shopping-cart"></i> Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="reportes.html">
+                            <i class="fas fa-chart-bar"></i> Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="users.html">
+                            <i class="fas fa-users"></i> Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> <span id="userName">Admin</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-analytics me-2"></i>Centro de Reportes</h1>
+            <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>Exportar PDF
+            </button>
+        </div>
+
+        <div class="row">
+            <!-- Top Productos -->
+            <div class="col-lg-7">
+                <div class="card report-card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-star me-2"></i>Top 5 Productos Más Vendidos
+                    </div>
+                    <div class="card-body">
+                        <canvas id="topProductsChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen Rápido -->
+            <div class="col-lg-5">
+                <div class="card report-card">
+                    <div class="card-header bg-dark text-white">
+                        <i class="fas fa-list me-2"></i>Resumen de Inventario
+                    </div>
+                    <div class="card-body">
+                        <div id="stockSummary">
+                            <!-- Dinámico -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas de Stock Detalladas -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card report-card">
+                    <div class="card-header bg-danger text-white">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Productos con Stock Crítico o Agotado
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Stock Actual</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockAlertsTable">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let token = localStorage.getItem("token");
+        let user = JSON.parse(localStorage.getItem("user") || "{}");
+
+        if (!token || user.rol !== 'Administrador') {
+            window.location.href = "login.html";
+        }
+
+        document.getElementById("userName").textContent = user.nombre;
+
+        window.onload = function() {
+            cargarTopProducts();
+            cargarAlertasStock();
+        };
+
+        function cargarTopProducts() {
+            fetch("http://localhost:3000/api/reports/top-products", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const labels = data.products.map(p => p.nombre);
+                    const values = data.products.map(p => p.total_vendido);
+
+                    const ctx = document.getElementById('topProductsChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Unidades Vendidas',
+                                data: values,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            scales: { 
+                                x: { 
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1,
+                                        precision: 0
+                                    }
+                                } 
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function cargarAlertasStock() {
+            fetch("http://localhost:3000/api/reports/stock-alerts", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const table = document.getElementById("stockAlertsTable");
+                    const summary = document.getElementById("stockSummary");
+                    let html = "";
+                    let totalAgotados = 0;
+                    let totalBajo = 0;
+
+                    if (data.alerts.length === 0) {
+                        table.innerHTML = `<tr><td colspan="5" class="text-center">No hay alertas de stock actuales</td></tr>`;
+                    } else {
+                        data.alerts.forEach(alert => {
+                            const isOut = alert.stock_actual === 0;
+                            if (isOut) totalAgotados++; else totalBajo++;
+
+                            html += `
+                                <tr>
+                                    <td><strong>${alert.nombre}</strong></td>
+                                    <td>${alert.stock_actual}</td>
+                                    <td>${alert.stock_minimo}</td>
+                                    <td>
+                                        <span class="badge ${isOut ? 'bg-danger' : 'bg-warning text-dark'}">
+                                            ${isOut ? 'AGOTADO' : 'STOCK BAJO'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="productos.html" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Abastecer
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        table.innerHTML = html;
+                    }
+
+                    summary.innerHTML = `
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Productos Agotados:</span>
+                            <span class="badge bg-danger">${totalAgotados}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Stock Crítico:</span>
+                            <span class="badge bg-warning text-dark">${totalBajo}</span>
+                        </div>
+                        <hr>
+                        <div class="text-center">
+                            <p class="text-muted small">El sistema recomienda revisar los productos con menos de ${data.alerts[0]?.stock_minimo || 5} unidades.</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

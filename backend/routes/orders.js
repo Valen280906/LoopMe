@@ -71,6 +71,23 @@ router.post("/create", clienteAuth, async (req, res) => {
         const connection = db.promise();
 
         try {
+            // 0. Verificar idempotencia (evitar pedidos duplicados)
+            if (payment && payment.intentId) {
+                const [existingPayment] = await connection.execute(
+                    "SELECT pedido_id FROM pagos WHERE referencia = ?",
+                    [payment.intentId]
+                );
+
+                if (existingPayment.length > 0) {
+                    return res.json({
+                        success: true,
+                        message: "Pedido ya procesado (idempotencia)",
+                        orderId: existingPayment[0].pedido_id,
+                        orderNumber: `ORD-${existingPayment[0].pedido_id.toString().padStart(6, '0')}`
+                    });
+                }
+            }
+
             await connection.beginTransaction();
 
             // 1. Crear pedido
@@ -94,34 +111,15 @@ router.post("/create", clienteAuth, async (req, res) => {
                     throw new Error(`Stock insuficiente para el producto: ${item.nombre}`);
                 }
 
+                console.log(`[STOCK DEBUG] Insertando ${item.cantidad} unidades para producto ID ${item.id}. Stock actual antes: ${stockRows[0].stock_actual}`);
+
                 await connection.execute(
                     `INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
                      VALUES (?, ?, ?, ?, ?)`,
                     [orderId, item.id, item.cantidad, item.precio, item.precio * item.cantidad]
                 );
 
-                // 3. Actualizar stock
-                await connection.execute(
-                    `UPDATE inventario 
-                     SET stock_actual = stock_actual - ?,
-                         ultima_actualizacion = CURRENT_TIMESTAMP
-                     WHERE producto_id = ?`,
-                    [item.cantidad, item.id]
-                );
-
-                // 4. Verificar y crear alerta si el stock es bajo
-                await connection.execute(
-                    `INSERT INTO alertas_stock(producto_id, mensaje)
-                     SELECT ?, 'Stock bajo después de venta'
-                     FROM inventario i
-                     WHERE i.producto_id = ?
-                     AND i.stock_actual <= i.stock_minimo
-                     AND NOT EXISTS (
-                         SELECT 1 FROM alertas_stock a 
-                         WHERE a.producto_id = ? AND a.resuelta = 0
-                     )`,
-                    [item.id, item.id, item.id]
-                );
+                // El stock se actualiza automáticamente mediante el trigger DB: tr_update_stock_after_sale
             }
 
             // 5. Crear registro de pago
@@ -146,8 +144,9 @@ router.post("/create", clienteAuth, async (req, res) => {
         } catch (error) {
             await connection.rollback();
             throw error;
+        } finally {
+            connection.release();
         }
-        // No release() for single connection
 
     } catch (error) {
         console.error("Error creating order:", error);

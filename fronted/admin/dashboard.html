@@ -61,6 +61,12 @@
                     </li>
 
                     <li class="nav-item">
+                        <a class="nav-link" href="reportes.html">
+                            <i class="fas fa-chart-bar"></i> Reportes
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link" href="users.html">
                             <i class="fas fa-users"></i> Usuarios
                         </a>
@@ -163,18 +169,18 @@
                     <div class="card-header bg-dark text-white">
                         <i class="fas fa-bell me-2"></i>Alertas Recientes
                     </div>
-                    <div class="card-body">
-                        <div class="alert alert-warning" role="alert">
+                    <div class="card-body" id="alertsContainer">
+                        <div class="alert alert-warning" role="alert" id="lowStockAlert">
                             <i class="fas fa-exclamation-circle me-2"></i>
-                            <strong>Stock bajo:</strong> Actualmente no posee Alertas
+                            <strong>Stock bajo:</strong> Cargando...
                         </div>
-                        <div class="alert alert-danger" role="alert">
+                        <div class="alert alert-danger" role="alert" id="outOfStockAlert">
                             <i class="fas fa-times-circle me-2"></i>
-                            <strong>Producto agotado:</strong>
+                            <strong>Producto agotado:</strong> Cargando...
                         </div>
-                        <div class="alert alert-info" role="alert">
+                        <div class="alert alert-info" role="alert" id="newOrdersAlert">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Nuevo pedido:</strong> Sin pedidos actuales
+                            <strong>Nuevo pedido:</strong> Cargando...
                         </div>
                     </div>
                 </div>
@@ -213,7 +219,8 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Variables globales
@@ -224,6 +231,7 @@
         window.onload = function () {
             verificarAutenticacion();
             cargarEstadisticas();
+            cargarAlertas();
             inicializarGrafico();
         };
 
@@ -259,11 +267,22 @@
 
         // Cerrar sesión
         function logout() {
-            if (confirm("¿Está seguro de cerrar sesión?")) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                window.location.href = "login.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "¿Estás seguro que deseas salir del sistema?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "login.html";
+                }
+            });
         }
 
         // Cargar estadísticas
@@ -328,8 +347,59 @@
                 .catch(err => console.error("Error cargando gráfico:", err));
         }
 
+        // Cargar alertas recientes (Dinamismo solicitado)
+        function cargarAlertas() {
+            fetch("http://localhost:3000/api/reports/recent-alerts", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const { lowStock, outOfStock, newOrdersCount } = data.alerts;
+                    console.log("[DEBUG ALERTS] Low Stock:", lowStock);
+                    console.log("[DEBUG ALERTS] Out of Stock:", outOfStock);
+                    console.log("[DEBUG ALERTS] New Orders:", newOrdersCount);
+                    
+                    // Stock Bajo
+                    const lowStockEl = document.getElementById("lowStockAlert");
+                    if (lowStock.length > 0) {
+                        const items = lowStock.map(p => `${p.nombre} (${p.stock_actual})`).join(", ");
+                        lowStockEl.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i><strong>Stock bajo:</strong> ${items}`;
+                        lowStockEl.className = "alert alert-warning";
+                    } else {
+                        lowStockEl.innerHTML = `<i class="fas fa-check-circle me-2"></i><strong>Stock bajo:</strong> Todo al día`;
+                        lowStockEl.className = "alert alert-success";
+                    }
+
+                    // Agotados
+                    const outOfStockEl = document.getElementById("outOfStockAlert");
+                    if (outOfStock.length > 0) {
+                        const items = outOfStock.map(p => p.nombre).join(", ");
+                        outOfStockEl.innerHTML = `<i class="fas fa-times-circle me-2"></i><strong>Agotado:</strong> ${items}`;
+                        outOfStockEl.style.display = "block";
+                    } else {
+                        outOfStockEl.style.display = "none";
+                    }
+
+                    // Nuevos Pedidos
+                    const newOrdersEl = document.getElementById("newOrdersAlert");
+                    if (newOrdersCount > 0) {
+                        newOrdersEl.innerHTML = `<i class="fas fa-shopping-bag me-2"></i><strong>Nuevos pedidos:</strong> ${newOrdersCount} hoy`;
+                        newOrdersEl.className = "alert alert-info bounce-alert";
+                    } else {
+                        newOrdersEl.innerHTML = `<i class="fas fa-info-circle me-2"></i><strong>Pedidos:</strong> Sin novedades hoy`;
+                        newOrdersEl.className = "alert alert-light border";
+                    }
+                }
+            })
+            .catch(err => console.error("Error cargando alertas:", err));
+        }
+
         // Actualizar datos cada 30 segundos
-        setInterval(cargarEstadisticas, 30000);
+        setInterval(() => {
+            cargarEstadisticas();
+            cargarAlertas();
+        }, 30000);
     </script>
 </body>
 

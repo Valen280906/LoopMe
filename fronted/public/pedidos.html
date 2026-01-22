@@ -9,6 +9,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Estilos LoopMe -->
     <link rel="stylesheet" href="css/public.css">
     <style>
@@ -118,15 +120,137 @@
     <footer class="loopme-footer mt-auto">
         <div class="container">
             <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="mb-0 text-white">&copy; 2024 LoopMe - Tu Tienda de Moda</p>
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
                 </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Navegación</h5>
+                        <ul>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Políticas y Términos -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
+
+    <!-- Modal de Detalles de Pedido -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-loopme text-white">
+                    <h5 class="modal-title" id="orderModalTitle">Detalle del Pedido #0</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="orderDetailBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let token = null;
 
@@ -226,31 +350,134 @@
         }
 
         function confirmarRecepcion(id) {
-            if (!confirm("¿Confirmas que has recibido tu pedido correctamente?")) return;
+            Swal.fire({
+                title: '¿Confirmar recepción?',
+                text: "¿Has recibido tu pedido correctamente?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, lo recibí',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Procesando...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-            fetch(`/api/orders/${id}/estado`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ estado: 'Entregado' })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("¡Gracias por confirmar! Esperamos que disfrutes tu compra.");
-                        cargarMisPedidos();
-                    } else {
-                        alert("Error: " + data.message);
-                    }
-                })
-                .catch(err => alert("Error de conexión"));
+                    fetch(`/api/orders/${id}/estado`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ estado: 'Entregado' })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: '¡Confirmado!',
+                                    text: '¡Gracias por confirmar! Esperamos que disfrutes tu compra.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#6f42c1'
+                                });
+                                cargarMisPedidos();
+                            } else {
+                                Swal.fire('Error', data.message || 'No se pudo actualizar', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire('Error de conexión', 'No se pudo contactar con el servidor', 'error');
+                        });
+                }
+            });
         }
 
+        const detailModal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+
         function verDetalle(id) {
-            // Implementar modal o redirección a detalle
-            alert("Detalle del pedido #" + id + " (Próximamente)");
+            document.getElementById('orderModalTitle').innerText = `Detalle del Pedido #${id}`;
+            const body = document.getElementById('orderDetailBody');
+            body.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
+            
+            detailModal.show();
+
+            fetch(`/api/orders/${id}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const p = data.pedido;
+                    const detalles = data.detalles;
+                    
+                    let tableRows = '';
+                    detalles.forEach(d => {
+                        tableRows += `
+                            <tr>
+                                <td>${d.producto_nombre}</td>
+                                <td>${d.cantidad}</td>
+                                <td>$${parseFloat(d.precio_unitario).toFixed(2)}</td>
+                                <td class="text-end">$${parseFloat(d.subtotal).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    body.innerHTML = `
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted text-uppercase small fw-bold">Información del Cliente</h6>
+                                <p class="mb-1"><strong>${p.cliente_nombre} ${p.cliente_apellido || ''}</strong></p>
+                                <p class="mb-0 text-muted">${p.cliente_email}</p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <h6 class="text-muted text-uppercase small fw-bold">Fecha del Pedido</h6>
+                                <p class="mb-0">${new Date(p.fecha_pedido).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cant.</th>
+                                        <th>Precio</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tableRows}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3" class="text-end">Total</th>
+                                        <th class="text-end text-primary fs-5">$${parseFloat(p.total).toFixed(2)}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    body.innerHTML = `<div class="alert alert-danger">${data.message || 'Error al cargar detalles'}</div>`;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                body.innerHTML = `<div class="alert alert-danger">Error de conexión al servidor</div>`;
+            });
         }
 
         // Menú desplegable reutilizado
@@ -265,6 +492,12 @@
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="pedidos.html">
                         <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
+                    </a>
+                    <a class="dropdown-item" href="favoritos.html">
+                        <i class="fas fa-heart me-2"></i>Favoritos
+                    </a>
+                    <a class="dropdown-item" href="perfil.html">
+                        <i class="fas fa-user-edit me-2"></i>Mi Perfil
                     </a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()">
@@ -294,11 +527,22 @@
         }
 
         function logoutCliente() {
-            if (confirm("¿Cerrar sesión?")) {
-                localStorage.removeItem("cliente_token");
-                localStorage.removeItem("cliente_info");
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "¿Estás seguro de que deseas salir?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6f42c1',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
         }
     </script>
 </body>

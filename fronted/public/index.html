@@ -209,15 +209,115 @@
 
     <!-- Footer -->
     <footer class="loopme-footer mt-auto">
-        <div class="container text-center py-4">
-            <div class="mb-3">
-                <i class="fas fa-tshirt me-2"></i> <strong>LoopMe</strong>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Navegación</h5>
+                        <ul>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <p class="text-muted small mb-0">&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
+            <div class="copyright">
+                <p>&copy; 2024 LoopMe Tienda de Ropa. Todos los derechos reservados.</p>
+            </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Políticas y Términos -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
 </body>
 </html>

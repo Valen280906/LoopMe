@@ -120,17 +120,15 @@ router.post("/confirm-payment", clienteAuth, async (req, res) => {
 
             // 2. Agregar detalles del pedido
             for (const item of items) {
+                console.log(`[STOCK DEBUG STRIPE] Insertando ${item.cantidad} unidades para producto ID ${item.id}.`);
+
                 await connection.execute(
                     `INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
                      VALUES (?, ?, ?, ?, ?)`,
                     [orderId, item.id, item.cantidad, item.precio, item.precio * item.cantidad]
                 );
 
-                // 3. Actualizar stock
-                await connection.execute(
-                    `UPDATE inventario SET stock_actual = stock_actual - ? WHERE producto_id = ?`,
-                    [item.cantidad, item.id]
-                );
+                // El stock se actualiza automáticamente mediante el trigger DB: tr_update_stock_after_sale
             }
 
             // 4. Crear registro de pago

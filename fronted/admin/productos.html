@@ -42,6 +42,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="reportes.html">
+                            <i class="fas fa-chart-bar"></i> Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="users.html">
                             <i class="fas fa-users"></i> Usuarios
                         </a>
@@ -290,6 +295,8 @@
     </div>
 
     <!-- Scripts -->
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Variables globales
@@ -355,11 +362,22 @@
 
         // Cerrar sesión
         function logout() {
-            if (confirm("¿Está seguro de cerrar sesión?")) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                window.location.href = "login.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "¿Estás seguro que deseas salir del sistema?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+                    window.location.href = "login.html";
+                }
+            });
         }
 
         // Cargar categorías
@@ -481,7 +499,7 @@
         // Mostrar modal para nuevo producto
         function mostrarModalProducto(editar = false) {
             if (usuario.rol !== 'Administrador') {
-                alert('Solo los administradores pueden crear productos');
+                Swal.fire('Acceso denegado', 'Solo los administradores pueden crear productos', 'error');
                 return;
             }
 
@@ -527,7 +545,7 @@
 
             // Validaciones básicas
             if (!formData.get('nombre') || !formData.get('precio')) {
-                alert('Nombre y precio son obligatorios');
+                Swal.fire('Campos requeridos', 'Nombre y precio son obligatorios', 'warning');
                 return;
             }
 
@@ -558,16 +576,21 @@
                 .then(data => {
                     console.log('Datos recibidos:', data);
                     if (data.success) {
-                        alert(data.message);
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#3085d6'
+                        });
                         cargarProductos();
                         bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
                     } else {
-                        alert('Error: ' + data.message);
+                        Swal.fire('Error', data.message, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error completo:', error);
-                    alert('Error al guardar el producto: ' + error.message);
+                    Swal.fire('Error', 'Error al guardar el producto: ' + error.message, 'error');
                 });
         }
 
@@ -575,7 +598,7 @@
         // Editar producto
         function editarProducto(id) {
             if (usuario.rol !== 'Administrador') {
-                alert('Solo los administradores pueden editar productos');
+                Swal.fire('Acceso denegado', 'Solo los administradores pueden editar productos', 'error');
                 return;
             }
 
@@ -622,34 +645,47 @@
         // Eliminar producto (desactivar)
         function eliminarProducto(id) {
             if (usuario.rol !== 'Administrador') {
-                alert('Solo los administradores pueden eliminar productos');
+                Swal.fire('Acceso denegado', 'Solo los administradores pueden eliminar productos', 'error');
                 return;
             }
 
-            if (!confirm('¿Está seguro de eliminar este producto? Se desactivará pero no se borrarán los registros.')) {
-                return;
-            }
-
-            // Usar la ruta correcta: /api/admin/products/id
-            fetch(`http://localhost:3000/api/products/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "El producto será desactivado pero se mantendrá en el historial.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Usar la ruta correcta: /api/admin/products/id
+                    fetch(`http://localhost:3000/api/products/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    '¡Eliminado!',
+                                    data.message,
+                                    'success'
+                                );
+                                cargarProductos();
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Error al eliminar el producto', 'error');
+                        });
                 }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        cargarProductos();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al eliminar el producto');
-                });
+            });
         }
 
         // Ver detalles del producto
@@ -730,12 +766,12 @@
                         const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
                         modal.show();
                     } else {
-                        alert('Error al cargar los detalles del producto');
+                        Swal.fire('Error', 'Error al cargar los detalles del producto', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error al cargar los detalles del producto');
+                    Swal.fire('Error', 'Error al cargar los detalles del producto', 'error');
                 });
         }
 

@@ -1,0 +1,9 @@
+--- USER REPORT ---
+
+== USUARIOS ==
+ID: 1, Email: 'admin@loopme.com', Rol: Administrador, Active: 1
+ID: 2, Email: 'newclient@test.com', Rol: Cliente, Active: 1
+ID: 4, Email: 'maria23@loopme.com', Rol: Cliente, Active: 1
+
+== CLIENTES ==
+ID: 1, Email: 'cliente@loopme.com', Active: 1, Password: 123456...

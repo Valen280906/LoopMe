@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .product-detail-container {
             margin-top: 40px;
@@ -398,12 +400,12 @@
                 </div>
                 <div class="col-lg-2 col-md-4 mb-4">
                     <div class="footer-links">
-                        <h5>Comprar</h5>
+                        <h5>Navegación</h5>
                         <ul>
-                            <li><a href="#">Mujer</a></li>
-                            <li><a href="#">Hombre</a></li>
-                            <li><a href="#">Niños</a></li>
-                            <li><a href="#">Ofertas</a></li>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -413,8 +415,7 @@
                         <ul>
                             <li><a href="#">Sobre Nosotros</a></li>
                             <li><a href="#">Contacto</a></li>
-                            <li><a href="#">Políticas</a></li>
-                            <li><a href="#">Términos</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -437,6 +438,64 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Políticas y Términos -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lógica del modal de términos
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            // Opcional: Guardar en localStorage que aceptó
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
     <script>
         // Variables globales
         let productoActual = null;
@@ -475,6 +534,18 @@
             } else {
                 loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
                 loginLink.href = "login-cliente.html";
+            }
+        }
+
+        // Helper to get user-scoped key
+        function getUserKey(baseKey) {
+            const clienteInfo = localStorage.getItem("cliente_info");
+            if (!clienteInfo) return baseKey;
+            try {
+                const cliente = JSON.parse(clienteInfo);
+                return cliente.email ? `${baseKey}_${cliente.email}` : baseKey;
+            } catch(e) {
+                return baseKey;
             }
         }
 
@@ -526,11 +597,22 @@
 
         // Cerrar sesión
         function logoutCliente() {
-            if (confirm("¿Estás seguro de cerrar sesión?")) {
-                localStorage.removeItem("cliente_token");
-                localStorage.removeItem("cliente_info");
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "Esperamos verte pronto por LoopMe",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
         }
 
         // Obtener ID del producto desde la URL
@@ -553,23 +635,26 @@
             
             fetch(`http://localhost:3000/api/products/${productId}`)
                 .then(response => {
+                    console.log("Fetch status:", response.status); 
                     if (!response.ok) {
-                        throw new Error('Producto no encontrado');
+                        throw new Error(`Error HTTP: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
+                    console.log("Data loaded:", data);
                     if (data.success && data.producto) {
                         productoActual = data.producto;
                         mostrarProductoDetalle();
                         cargarProductosRelacionados();
                     } else {
-                        mostrarError("Producto no encontrado");
+                        console.error("Data error:", data.message);
+                        mostrarError(data.message || "Producto no encontrado");
                     }
                 })
                 .catch(error => {
-                    console.error("Error:", error);
-                    mostrarError("Error al cargar el producto");
+                    console.error("Catch error:", error);
+                    mostrarError(`Error al cargar el producto: ${error.message}`);
                 });
         }
 
@@ -607,8 +692,22 @@
             // Actualizar disponibilidad
             actualizarDisponibilidad();
             
+            // Verificar si está en lista de deseos (Scoped to User)
+            const favoritesKey = getUserKey("loopme_favorites");
+            const favoritos = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+            const esFavorito = favoritos.some(fav => fav.id === productoActual.id);
+            document.getElementById("saveForLater").checked = esFavorito;
+            
+            // Vincular evento de guardado
+            document.getElementById("saveForLater").onchange = function() {
+                toggleFavorite(this.checked);
+            };
+            
             // Ocultar loading
-            document.getElementById("loadingImage").style.display = "none";
+            const loadingImg = document.getElementById("loadingImage");
+            if (loadingImg) {
+                loadingImg.style.display = "none";
+            }
         }
 
         // Actualizar imágenes del producto
@@ -637,12 +736,6 @@
                     <img src="${mainImageUrl || 'https://via.placeholder.com/100x100/eee/999?text=Sin+imagen'}" 
                          alt="Vista 1"
                          onerror="this.src='https://via.placeholder.com/100x100/eee/999?text=Sin+imagen'">
-                </div>
-                <div class="thumbnail-item" onclick="cambiarImagen('https://via.placeholder.com/600x600/ccc/666?text=Angulo+2')">
-                    <img src="https://via.placeholder.com/100x100/ccc/666?text=Angulo+2" alt="Vista 2">
-                </div>
-                <div class="thumbnail-item" onclick="cambiarImagen('https://via.placeholder.com/600x600/bbb/555?text=Angulo+3')">
-                    <img src="https://via.placeholder.com/100x100/bbb/555?text=Angulo+3" alt="Vista 3">
                 </div>
             `;
         }
@@ -926,18 +1019,53 @@
             window.location.href = "checkout.html?comprar_ahora=true";
         }
 
-        // Mostrar mensaje del carrito
+        // Guardar/Quitar de lista de deseos (Scoped to User)
+        function toggleFavorite(save) {
+            if (!productoActual) return;
+            
+            const favoritesKey = getUserKey("loopme_favorites");
+            let favoritos = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
+            const index = favoritos.findIndex(f => f.id === productoActual.id);
+            
+            if (save) {
+                if (index === -1) {
+                    favoritos.push({
+                        id: productoActual.id,
+                        nombre: productoActual.nombre,
+                        precio: productoActual.precio,
+                        imagen_url: productoActual.imagen_url,
+                        categoria: productoActual.categoria
+                    });
+                    localStorage.setItem(favoritesKey, JSON.stringify(favoritos));
+                    mostrarMensajeCarrito("Guardado en tu lista de deseos", "success");
+                }
+            } else {
+                if (index >= 0) {
+                    favoritos.splice(index, 1);
+                    localStorage.setItem(favoritesKey, JSON.stringify(favoritos));
+                    mostrarMensajeCarrito("Eliminado de tu lista de deseos", "info");
+                }
+            }
+        }
+
+        // Mostrar mensaje del carrito (Mejorado con SweetAlert2 Toast)
         function mostrarMensajeCarrito(mensaje, tipo) {
-            const cartMessage = document.getElementById("cartMessage");
-            
-            cartMessage.textContent = mensaje;
-            cartMessage.className = `alert alert-${tipo} mt-3`;
-            cartMessage.classList.remove("d-none");
-            
-            // Ocultar después de 3 segundos
-            setTimeout(() => {
-                cartMessage.classList.add("d-none");
-            }, 3000);
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'bottom-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: tipo === 'danger' ? 'error' : tipo,
+                title: mensaje
+            });
         }
 
         // Actualizar contador del carrito

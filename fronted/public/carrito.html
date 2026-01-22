@@ -378,12 +378,12 @@
                 </div>
                 <div class="col-lg-2 col-md-4 mb-4">
                     <div class="footer-links">
-                        <h5>Comprar</h5>
+                        <h5>Navegación</h5>
                         <ul>
-                            <li><a href="#">Mujer</a></li>
-                            <li><a href="#">Hombre</a></li>
-                            <li><a href="#">Niños</a></li>
-                            <li><a href="#">Ofertas</a></li>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -393,8 +393,7 @@
                         <ul>
                             <li><a href="#">Sobre Nosotros</a></li>
                             <li><a href="#">Contacto</a></li>
-                            <li><a href="#">Políticas</a></li>
-                            <li><a href="#">Términos</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -417,6 +416,63 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Modal de Políticas y Términos -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
     <script>
         // Variables globales
         let carrito = [];
@@ -459,6 +515,18 @@
             }
         }
 
+        // Helper to get user-scoped key
+        function getUserKey(baseKey) {
+            const clienteInfo = localStorage.getItem("cliente_info");
+            if (!clienteInfo) return baseKey;
+            try {
+                const cliente = JSON.parse(clienteInfo);
+                return cliente.email ? `${baseKey}_${cliente.email}` : baseKey;
+            } catch(e) {
+                return baseKey;
+            }
+        }
+
         // Menú desplegable para usuario autenticado
         function mostrarMenuUsuario() {
             const cliente = JSON.parse(localStorage.getItem("cliente_info"));
@@ -472,10 +540,10 @@
                     <a class="dropdown-item" href="pedidos.html">
                         <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="favoritos.html">
                         <i class="fas fa-heart me-2"></i>Favoritos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="perfil.html">
                         <i class="fas fa-user-edit me-2"></i>Mi Perfil
                     </a>
                     <div class="dropdown-divider"></div>
@@ -507,11 +575,22 @@
 
         // Cerrar sesión
         function logoutCliente() {
-            if (confirm("¿Estás seguro de cerrar sesión?")) {
-                localStorage.removeItem("cliente_token");
-                localStorage.removeItem("cliente_info");
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "Esperamos verte pronto por LoopMe",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
         }
 
         // Cargar carrito desde localStorage
@@ -736,35 +815,49 @@
 
         // Eliminar producto del carrito
         function removeFromCart(index) {
-            if (confirm("¿Estás seguro de eliminar este producto del carrito?")) {
-                const item = carrito[index];
-                carrito.splice(index, 1);
-                guardarCarrito();
-                
-                mostrarNotificacion(`${item.nombre} eliminado del carrito`, "info");
-                
-                if (carrito.length === 0) {
-                    mostrarCarritoVacio();
-                } else {
-                    mostrarProductosCarrito();
-                    actualizarResumen();
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¿Deseas eliminar este producto del carrito?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const item = carrito[index];
+                    carrito.splice(index, 1);
+                    guardarCarrito();
+                    
+                    Swal.fire(
+                        'Eliminado!',
+                        'El producto ha sido eliminado.',
+                        'success'
+                    );
+                    
+                    if (carrito.length === 0) {
+                        mostrarCarritoVacio();
+                    } else {
+                        obtenerInformacionProductos(); // Recargar
+                    }
+                    actualizarContadorCarrito();
                 }
-                
-                actualizarContadorCarrito();
-            }
+            });
         }
 
-        // Guardar para después
+        // Guardar para después (Mover a favoritos - Scoped to User)
         function saveForLater(index) {
             const item = carrito[index];
+            const favoritesKey = getUserKey("loopme_favorites");
             
             // Obtener lista de favoritos
-            let favoritos = JSON.parse(localStorage.getItem("favoritos") || "[]");
+            let favoritos = JSON.parse(localStorage.getItem(favoritesKey) || "[]");
             
             // Verificar si ya está en favoritos
             if (!favoritos.some(fav => fav.id === item.id)) {
                 favoritos.push(item);
-                localStorage.setItem("favoritos", JSON.stringify(favoritos));
+                localStorage.setItem(favoritesKey, JSON.stringify(favoritos));
                 
                 // Eliminar del carrito
                 carrito.splice(index, 1);

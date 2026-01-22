@@ -130,45 +130,42 @@ CREATE TABLE pagos (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- TRIGGER: Actualiza stock al vender
+-- TRIGGER: Actualiza stock al vender e inserta en historial de alertas
+DROP TRIGGER IF EXISTS tr_update_stock_after_sale;
 DELIMITER $$
-
 CREATE TRIGGER tr_update_stock_after_sale
 AFTER INSERT ON detalles_pedido
 FOR EACH ROW
 BEGIN
+    -- 1. Reducir stock real
     UPDATE inventario 
     SET stock_actual = stock_actual - NEW.cantidad,
         ultima_actualizacion = CURRENT_TIMESTAMP
     WHERE producto_id = NEW.producto_id;
 
+    -- 2. Insertar registro histórico si baja del mínimo
     INSERT INTO alertas_stock(producto_id, mensaje)
-    SELECT NEW.producto_id, 'Stock bajo, requiere reposición'
+    SELECT NEW.producto_id, CONCAT('Stock bajo detectado tras venta: ', i.stock_actual, ' unidades restantes.')
     FROM inventario i
     WHERE i.producto_id = NEW.producto_id
     AND i.stock_actual <= i.stock_minimo;
 END$$
-
 DELIMITER ;
 
--- TRIGGER: marcar stock_bajo automáticamente
+-- TRIGGER: Actualizar el flag 'stock_bajo' automáticamente (SIN RECURSIÓN)
+DROP TRIGGER IF EXISTS tr_mark_low_stock;
 DELIMITER $$
-
 CREATE TRIGGER tr_mark_low_stock
-AFTER UPDATE ON inventario
+BEFORE UPDATE ON inventario
 FOR EACH ROW
 BEGIN
+    -- Evaluamos NEW para decidir el flag antes de que se guarde el cambio
     IF NEW.stock_actual <= NEW.stock_minimo THEN
-        UPDATE inventario 
-        SET stock_bajo = TRUE
-        WHERE id = NEW.id;
+        SET NEW.stock_bajo = 1;
     ELSE
-        UPDATE inventario
-        SET stock_bajo = FALSE
-        WHERE id = NEW.id;
+        SET NEW.stock_bajo = 0;
     END IF;
 END$$
-
 DELIMITER ;
 
 INSERT INTO usuarios(nombre, apellido, email, password, rol, activo)
@@ -212,7 +209,8 @@ USE loopme;
 ALTER TABLE productos MODIFY COLUMN talla VARCHAR(50) NULL;
 ALTER TABLE productos MODIFY COLUMN color VARCHAR(50) NULL;
 
-DROP TRIGGER IF EXISTS tr_mark_low_stock;
+-- Mantener triggers activos
+-- DROP TRIGGER IF EXISTS tr_mark_low_stock; (Eliminado para evitar borrar la lógica necesaria)
 
 -- Desactivar restricciones de clave foránea temporalmente
 SET FOREIGN_KEY_CHECKS = 0;

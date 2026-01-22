@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
     <style>
@@ -371,12 +373,22 @@
                                 required>
                         </div>
 
+                        <div class="mb-2">
+                             <small class="text-success"><i class="fas fa-info-circle me-1"></i> Para pruebas usa: <strong>4242 4242 4242 4242</strong></small>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Detalles de la tarjeta *</label>
                             <div id="card-element" class="form-control p-0">
                                 <!-- Stripe Card Element se inyectará aquí -->
                             </div>
                             <div id="card-errors" class="card-errors" role="alert"></div>
+                            <div id="saved-card-info" class="mt-2" style="display: none;">
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i> 
+                                    Tarjeta guardada detectada: <span id="saved-card-details"></span>
+                                </small>
+                            </div>
                         </div>
 
                         <div class="form-check mb-3">
@@ -555,12 +567,12 @@
                 </div>
                 <div class="col-lg-2 col-md-4 mb-4">
                     <div class="footer-links">
-                        <h5>Comprar</h5>
+                        <h5>Navegación</h5>
                         <ul>
-                            <li><a href="#">Mujer</a></li>
-                            <li><a href="#">Hombre</a></li>
-                            <li><a href="#">Niños</a></li>
-                            <li><a href="#">Ofertas</a></li>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="pedidos.html">Mis Pedidos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -570,8 +582,7 @@
                         <ul>
                             <li><a href="#">Sobre Nosotros</a></li>
                             <li><a href="#">Contacto</a></li>
-                            <li><a href="#">Políticas</a></li>
-                            <li><a href="#">Términos</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
                         </ul>
                     </div>
                 </div>
@@ -594,6 +605,62 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal de Políticas y Términos (Footer) -->
+    <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-contract me-2"></i>Términos, Condiciones y Políticas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h4>1. Términos de Uso</h4>
+                    <p>Bienvenido a LoopMe. Al acceder y utilizar nuestro sitio web, aceptas cumplir con los siguientes términos y condiciones. Si no estás de acuerdo con alguna parte, te pedimos no utilizar nuestros servicios.</p>
+                    
+                    <h4>2. Políticas de Envío</h4>
+                    <p>Nos esforzamos por realizar envíos a toda Venezuela. Los tiempos de entrega varían según la ubicación, generalmente entre 2 a 5 días hábiles. LoopMe no se hace responsable por retrasos causados por las empresas de encomienda.</p>
+                    
+                    <h4>3. Políticas de Devolución</h4>
+                    <p>Aceptamos devoluciones dentro de los 7 días posteriores a la recepción del producto, siempre que la prenda esté en perfectas condiciones, con sus etiquetas originales y sin uso. Los costos de envío por devolución corren por cuenta del cliente, salvo errores de fábrica.</p>
+                    
+                    <h4>4. Privacidad y Datos</h4>
+                    <p>Tu privacidad es importante. Tus datos personales serán utilizados únicamente para procesar tus pedidos y mejorar tu experiencia de compra. No compartimos tu información con terceros no autorizados.</p>
+                    
+                    <div class="form-check mt-4 p-3 bg-light rounded border">
+                        <input class="form-check-input" type="checkbox" id="acceptPolicy">
+                        <label class="form-check-label" for="acceptPolicy">
+                            He leído y acepto los términos, condiciones y políticas de privacidad de LoopMe.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnAcceptPolicy" disabled onclick="acceptPolicyAction()">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkbox = document.getElementById('acceptPolicy');
+            const btn = document.getElementById('btnAcceptPolicy');
+            
+            if(checkbox && btn) {
+                checkbox.addEventListener('change', function() {
+                    btn.disabled = !this.checked;
+                });
+            }
+        });
+
+        function acceptPolicyAction() {
+            const modalEl = document.getElementById('policyModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            localStorage.setItem('termsAccepted', 'true');
+        }
+    </script>
     <script>
         // Variables globales
         let stripe = null;
@@ -638,11 +705,27 @@
         }
 
         function redirigirSiNoAutenticado() {
-            if (confirm("Para continuar con la compra necesitas iniciar sesión. ¿Deseas iniciar sesión ahora?")) {
-                window.location.href = "login-cliente.html?redirect=checkout";
-            } else {
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: 'Inicio de sesión requerido',
+                text: "Para continuar con la compra necesitas iniciar sesión. ¿Deseas hacerlo ahora?",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, iniciar sesión',
+                cancelButtonText: 'Volver a la tienda'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "login-cliente.html?redirect=checkout";
+                } else {
+                    window.location.href = "tienda.html";
+                }
+            });
+        }
+
+        // Helper to get user-scoped key
+        function getUserKey(baseKey) {
+            return clienteInfo && clienteInfo.email ? `${baseKey}_${clienteInfo.email}` : baseKey;
         }
 
         // Cargar datos del cliente en el formulario
@@ -660,6 +743,47 @@
                 }
 
                 document.getElementById('email').value = clienteInfo.email || '';
+            }
+
+            // CARGAR DIRECCIÓN GUARDADA (LoopMe Fix - Scoped to User)
+            const savedAddresses = JSON.parse(localStorage.getItem(getUserKey('loopme_addresses')) || '[]');
+            const defaultAddr = savedAddresses.find(a => a.isDefault) || savedAddresses[0];
+
+            if (defaultAddr) {
+                document.getElementById('address').value = defaultAddr.street || '';
+                document.getElementById('city').value = defaultAddr.city || '';
+                document.getElementById('state').value = defaultAddr.state || '';
+                document.getElementById('postalCode').value = defaultAddr.zip || '';
+                
+                // Nuevos campos de persistencia
+                if (defaultAddr.firstName) document.getElementById('firstName').value = defaultAddr.firstName;
+                if (defaultAddr.lastName) document.getElementById('lastName').value = defaultAddr.lastName;
+                if (defaultAddr.phone) document.getElementById('phone').value = defaultAddr.phone;
+            }
+
+            // CARGAR TARJETA GUARDADA (LoopMe Fix - Scoped to User)
+            if (localStorage.getItem(getUserKey('card_saved')) === 'true') {
+                const savedCardholder = localStorage.getItem(getUserKey('saved_cardholder'));
+                const cardDetails = localStorage.getItem(getUserKey('saved_card_details')) || 'Visa **** 4242';
+                
+                if (savedCardholder) {
+                    document.getElementById('cardholder-name').value = savedCardholder;
+                }
+                
+                const infoDiv = document.getElementById('saved-card-info');
+                if (infoDiv) {
+                    infoDiv.style.display = 'block';
+                    infoDiv.innerHTML = `
+                        <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.9rem; border-left: 4px solid #0dcaf0;">
+                            <i class="fas fa-credit-card me-2"></i>
+                            <strong>Tarjeta detectada:</strong> ${cardDetails}
+                        </div>
+                    `;
+                }
+
+                // Mantener casilla marcada
+                const saveCardCheck = document.getElementById('save-card');
+                if (saveCardCheck) saveCardCheck.checked = true;
             }
         }
 
@@ -833,7 +957,11 @@
             });
 
             if (!document.getElementById('acceptTerms').checked) {
-                alert("Debes aceptar los términos y condiciones para continuar.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Términos y Condiciones',
+                    text: 'Debes aceptar los términos y condiciones para continuar.'
+                });
                 isValid = false;
             }
 
@@ -841,7 +969,11 @@
         }
 
         // Procesar pago
+        let orderProcessed = false; // Bandera para evitar doble procesamiento
+
         async function procesarPago() {
+            if (orderProcessed) return;
+
             const submitButton = document.getElementById('submit-payment');
             const cardholderName = document.getElementById('cardholder-name').value;
 
@@ -849,7 +981,11 @@
 
             // Validar que haya productos
             if (carrito.length === 0) {
-                alert("No hay productos en el carrito");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Carrito vacío',
+                    text: 'No hay productos en tu carrito para procesar una compra'
+                });
                 return;
             }
 
@@ -926,6 +1062,21 @@
                 console.log("9. Payment Intent resultado:", paymentIntent);
 
                 if (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing') {
+                    orderProcessed = true; // Marcar como procesado inmediatamente despues de éxito en Stripe
+                    
+                    // Manejar guardado de dirección si se marcó la casilla
+                    if (document.getElementById('saveAddress').checked) {
+                        guardarDireccionNueva();
+                    }
+
+                    // Manejar guardado de tarjeta si se marcó la casilla (Scoped to User)
+                    if (document.getElementById('save-card').checked) {
+                        localStorage.setItem(getUserKey('card_saved'), 'true');
+                        localStorage.setItem(getUserKey('saved_cardholder'), cardholderName);
+                        // En modo test, sabemos que es la 4242. En real usaríamos paymentIntent.payment_method_details
+                        localStorage.setItem(getUserKey('saved_card_details'), 'Visa **** 4242');
+                    }
+
                     // 3. Crear pedido en el backend
                     console.log("10. Creando pedido...");
                     await crearPedidoSimulado(paymentIntent.id);
@@ -939,8 +1090,17 @@
 
             } catch (error) {
                 console.error('12. Error completo:', error);
-                alert('Error: ' + error.message);  // Mostrar alerta para ver el error
-                document.getElementById('card-errors').textContent = 'Error: ' + error.message;
+                
+                // Limpiar mensaje de localhost si aparece
+                let cleanMessage = error.message.replace(/localhost:\d+/g, 'sistema');
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error en el pago',
+                    text: 'No pudimos procesar tu pago: ' + cleanMessage
+                });
+                
+                document.getElementById('card-errors').textContent = 'Error: ' + cleanMessage;
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-lock me-2"></i> Intentar de nuevo';
             }
@@ -967,7 +1127,7 @@
                     }
                 };
 
-                const response = await fetch('/api/orders/create', {
+                const response = await fetch('http://localhost:3000/api/orders/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -989,9 +1149,39 @@
 
             } catch (error) {
                 console.error("Error al guardar pedido:", error);
-                alert("Hubo un problema registrando tu pedido: " + error.message);
+                
+                let cleanMessage = error.message.replace(/localhost:\d+/g, 'servidor');
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al registrar pedido',
+                    text: 'Hubo un problema registrando tu pedido: ' + cleanMessage
+                });
                 // No redirigimos si falla el guardado para que el usuario sepa
                 throw error;
+            }
+        }
+
+        function guardarDireccionNueva() {
+            const addr = {
+                id: Date.now(),
+                title: 'Dirección de Compra',
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+                street: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zip: document.getElementById('postalCode').value,
+                isDefault: false
+            };
+            
+            const addressesKey = getUserKey('loopme_addresses');
+            let addresses = JSON.parse(localStorage.getItem(addressesKey) || '[]');
+            // Evitar duplicados simples
+            if (!addresses.some(a => a.street === addr.street && a.zip === addr.zip)) {
+                addresses.push(addr);
+                localStorage.setItem(addressesKey, JSON.stringify(addresses));
             }
         }
 
@@ -1007,10 +1197,10 @@
                     <a class="dropdown-item" href="pedidos.html">
                         <i class="fas fa-clipboard-list me-2"></i>Mis Pedidos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="favoritos.html">
                         <i class="fas fa-heart me-2"></i>Favoritos
                     </a>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="perfil.html">
                         <i class="fas fa-user-edit me-2"></i>Mi Perfil
                     </a>
                     <div class="dropdown-divider"></div>
@@ -1042,11 +1232,22 @@
 
         // Cerrar sesión
         function logoutCliente() {
-            if (confirm("¿Estás seguro de cerrar sesión?")) {
-                localStorage.removeItem("cliente_token");
-                localStorage.removeItem("cliente_info");
-                window.location.href = "tienda.html";
-            }
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "Esperamos verte pronto por LoopMe",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
         }
     </script>
 </body>

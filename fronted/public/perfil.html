@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - LoopMe</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Estilos globales LoopMe -->
+    <link rel="stylesheet" href="css/public.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0 40px;
+            margin-bottom: 40px;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            height: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+        
+        .profile-form-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-loopme">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-loopme" href="index.html">
+                <i class="fas fa-tshirt"></i> LoopMe
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLoopMe">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarLoopMe">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="index.html">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="tienda.html">
+                            <i class="fas fa-store"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="carrito.html">
+                            <i class="fas fa-shopping-cart"></i> Carrito
+                            <span class="badge bg-light text-primary ms-1" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme" href="pedidos.html">
+                             <i class="fas fa-clipboard-list"></i> Mis Pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-loopme active" href="#" id="loginLink">
+                            <i class="fas fa-user"></i> Mi Cuenta
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="profile-header text-center">
+        <div class="container">
+            <div class="profile-avatar" id="profileAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <h2 class="display-5 fw-bold mb-1" id="profileName">Cargando...</h2>
+            <p class="lead opacity-75 mb-0" id="profileEmail">...</p>
+        </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="container mb-5" style="margin-top: -60px; position: relative; z-index: 2;">
+        <!-- Stats Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card" onclick="window.location.href='pedidos.html'" style="cursor: pointer;">
+                    <div class="stat-number" id="statsOrders">0</div>
+                    <div class="stat-label">Pedidos Realizados</div>
+                </div>
+            </div>
+             <div class="col-md-4">
+                <div class="stat-card" onclick="window.location.href='favoritos.html'" style="cursor: pointer;">
+                    <div class="stat-number" id="statsFavorites">0</div>
+                    <div class="stat-label">Artículos Favoritos</div>
+                </div>
+            </div>
+             <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="stat-number" id="statsPoints">N/A</div>
+                    <div class="stat-label">Nivel de Cliente</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Información Personal -->
+            <div class="col-lg-8">
+                <div class="profile-form-section">
+                    <div class="section-header">
+                        <h3 class="section-title"><i class="fas fa-user-circle me-2 text-primary"></i>Información Personal</h3>
+                        <button class="btn btn-sm btn-outline-primary" id="btnEditProfile" onclick="toggleEditMode()">
+                            <i class="fas fa-pen me-1"></i> Editar
+                        </button>
+                    </div>
+                    
+                    <form id="profileForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="inputName" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="inputEmail" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="inputPhone" placeholder="Tu teléfono" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de Registro</label>
+                                <input type="text" class="form-control" id="inputJoinDate" disabled>
+                            </div>
+                            <div class="col-12 mt-4" id="saveButtons" style="display: none;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="toggleEditMode()">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Direcciones (Simulado por ahora) -->
+                <div class="profile-form-section">
+                    <div class="section-header">
+                        <h3 class="section-title"><i class="fas fa-map-marker-alt me-2 text-danger"></i>Dirección de Envío</h3>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openAddressModal()">
+                            <i class="fas fa-plus me-1"></i> Agregar
+                        </button>
+                    </div>
+                    <div id="addressesContainer">
+                        <!-- Las direcciones se cargarán aquí -->
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                            <p>No tienes direcciones guardadas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Acciones -->
+            <div class="col-lg-4">
+                <div class="profile-form-section">
+                    <div class="section-header">
+                        <h3 class="section-title">Cuenta</h3>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="pedidos.html" class="btn btn-outline-secondary text-start">
+                            <i class="fas fa-box me-2"></i> Historial de Pedidos
+                        </a>
+                        <a href="favoritos.html" class="btn btn-outline-secondary text-start">
+                            <i class="fas fa-heart me-2"></i> Mis Favoritos
+                        </a>
+                        <button class="btn btn-outline-secondary text-start">
+                             <i class="fas fa-key me-2"></i> Cambiar Contraseña
+                        </button>
+                        <button class="btn btn-outline-danger text-start mt-3" onclick="logoutCliente()">
+                            <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Direcciones -->
+    <div class="modal fade" id="addressModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addressModalTitle">Agregar Dirección</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addressForm">
+                        <input type="hidden" id="addressId">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de la ubicación (ej: Casa, Trabajo)</label>
+                            <input type="text" class="form-control" id="addrTitle" placeholder="Ej: Mi Casa" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Calle Principal / Número de casa</label>
+                            <input type="text" class="form-control" id="addrStreet" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ciudad</label>
+                                <input type="text" class="form-control" id="addrCity" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Estado</label>
+                                <input type="text" class="form-control" id="addrState" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="addrZip" required>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="addrDefault">
+                            <label class="form-check-label" for="addrDefault">Establecer como predeterminada</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAddress()">Guardar Dirección</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="loopme-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="footer-logo">
+                        <i class="fas fa-tshirt me-2"></i>LoopMe
+                    </div>
+                    <p>Tu tienda de moda online con las mejores prendas y accesorios para hombre y mujer.</p>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Navegación</h5>
+                        <ul>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="tienda.html">Tienda</a></li>
+                            <li><a href="carrito.html">Carrito</a></li>
+                            <li><a href="perfil.html">Mi Perfil</a></li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="col-lg-2 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Información</h5>
+                        <ul>
+                            <li><a href="#">Sobre Nosotros</a></li>
+                            <li><a href="#">Contacto</a></li>
+                            <li><a href="#" data-bs-toggle="modal" data-bs-target="#policyModal">Políticas y Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <div class="footer-links">
+                        <h5>Contacto</h5>
+                        <ul>
+                            <li><i class="fas fa-map-marker-alt me-2"></i> Caracas, Venezuela</li>
+                            <li><i class="fas fa-phone me-2"></i> +58 412-1234567</li>
+                            <li><i class="fas fa-envelope me-2"></i> info@loopme.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let clienteData = {};
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            cargarDatosPerfil();
+            actualizarContadorCarrito();
+        });
+
+        function verificarAutenticacion() {
+            const token = localStorage.getItem("cliente_token");
+            if (!token) {
+                window.location.href = "login-cliente.html";
+                return;
+            }
+            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
+            clienteData = clienteInfo;
+        }
+
+        // Helper to get user-scoped key
+        function getUserKey(baseKey) {
+            return clienteData && clienteData.email ? `${baseKey}_${clienteData.email}` : baseKey;
+        }
+
+        function cargarDatosPerfil() {
+            // Nombre y Email
+            document.getElementById('profileName').textContent = clienteData.nombre || 'Usuario';
+            document.getElementById('profileEmail').textContent = clienteData.email || 'email@ejemplo.com';
+            
+            // Avatar (inicial)
+            if(clienteData.nombre) {
+                document.getElementById('profileAvatar').innerHTML = clienteData.nombre.charAt(0).toUpperCase();
+            }
+            
+            // Form inputs
+            document.getElementById('inputName').value = clienteData.nombre || '';
+            document.getElementById('inputEmail').value = clienteData.email || '';
+            document.getElementById('inputJoinDate').value = new Date().toLocaleDateString(); // Simulado
+            
+            // Cargar stats
+            // 1. Favoritos (Scoped to User)
+            const favoritos = JSON.parse(localStorage.getItem(getUserKey('loopme_favorites')) || '[]');
+            document.getElementById('statsFavorites').textContent = favoritos.length;
+            
+            // 2. Pedidos - Fetch real
+            const token = localStorage.getItem("cliente_token");
+            fetch("/api/orders/my-orders", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.pedidos) {
+                    document.getElementById('statsOrders').textContent = data.pedidos.length;
+                }
+            })
+            .catch(err => console.error("Error fetching orders count:", err));
+            
+            // Simulación de nivel
+            document.getElementById('statsPoints').textContent = "Bronce";
+        }
+        
+        function toggleEditMode() {
+            const inputs = document.querySelectorAll('#profileForm input');
+            const saveBtns = document.getElementById('saveButtons');
+            const btnEdit = document.getElementById('btnEditProfile');
+            
+            const isDisabled = inputs[0].disabled;
+            
+            inputs.forEach(input => {
+                if(input.id !== 'inputEmail' && input.id !== 'inputJoinDate') { // Email no editable por seguridad simple
+                    input.disabled = !isDisabled;
+                }
+            });
+            
+            if(isDisabled) {
+                saveBtns.style.display = 'block';
+                btnEdit.style.display = 'none';
+            } else {
+                saveBtns.style.display = 'none';
+                btnEdit.style.display = 'inline-block';
+                // Reset values logic here ideally
+            }
+        }
+        
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Simular guardado
+            const newName = document.getElementById('inputName').value;
+            const newPhone = document.getElementById('inputPhone').value;
+            
+            clienteData.nombre = newName;
+            clienteData.telefono = newPhone;
+            
+            localStorage.setItem("cliente_info", JSON.stringify(clienteData));
+            
+            // Update UI
+            document.getElementById('profileName').textContent = newName;
+            if(newName) document.getElementById('profileAvatar').innerHTML = newName.charAt(0).toUpperCase();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Perfil actualizado',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            
+            toggleEditMode();
+            cargarDatosPerfil(); // Refresh menu
+        });
+
+        function logoutCliente() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: "Esperamos verte pronto por LoopMe",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem("cliente_token");
+                    localStorage.removeItem("cliente_info");
+                    window.location.href = "tienda.html";
+                }
+            });
+        }
+        
+        function actualizarContadorCarrito() {
+            const carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
+            const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+            const badge = document.getElementById('cartCount');
+            if(badge) badge.innerText = totalItems;
+        }
+
+        // --- Gestión de Direcciones ---
+        let addresses = [];
+        const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+
+        function cargarDirecciones() {
+            const container = document.getElementById('addressesContainer');
+            const addressesKey = getUserKey('loopme_addresses');
+            addresses = JSON.parse(localStorage.getItem(addressesKey) || '[]');
+            
+            if (addresses.length === 0) {
+                // No agregamos dirección por defecto automáticamente para evitar confusión entre usuarios
+                // Solo mostramos el estado vacío
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                        <p>No tienes direcciones guardadas</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            addresses.forEach((addr, index) => {
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-light rounded border mb-3';
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${addr.title}</strong>
+                            <p class="mb-1 text-muted small">${addr.street}, ${addr.city}, ${addr.state}, ${addr.zip}</p>
+                            ${addr.isDefault ? '<span class="badge bg-success">Predeterminada</span>' : ''}
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="javascript:void(0)" onclick="openAddressModal(${index})">Editar</a></li>
+                                <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteAddress(${index})">Eliminar</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function openAddressModal(index = null) {
+            const form = document.getElementById('addressForm');
+            form.reset();
+            
+            if (index !== null) {
+                const addr = addresses[index];
+                document.getElementById('addressModalTitle').innerText = 'Editar Dirección';
+                document.getElementById('addressId').value = index;
+                document.getElementById('addrTitle').value = addr.title;
+                document.getElementById('addrStreet').value = addr.street;
+                document.getElementById('addrCity').value = addr.city;
+                document.getElementById('addrState').value = addr.state;
+                document.getElementById('addrZip').value = addr.zip;
+                document.getElementById('addrDefault').checked = addr.isDefault;
+            } else {
+                document.getElementById('addressModalTitle').innerText = 'Agregar Dirección';
+                document.getElementById('addressId').value = '';
+            }
+            
+            addressModal.show();
+        }
+
+        function saveAddress() {
+            const index = document.getElementById('addressId').value;
+            const title = document.getElementById('addrTitle').value;
+            const street = document.getElementById('addrStreet').value;
+            const city = document.getElementById('addrCity').value;
+            const state = document.getElementById('addrState').value;
+            const zip = document.getElementById('addrZip').value;
+            const isDefault = document.getElementById('addrDefault').checked;
+
+            if (!title || !street || !city || !state || !zip) {
+                Swal.fire('Error', 'Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            const newAddr = {
+                id: index !== '' ? addresses[index].id : Date.now(),
+                title, street, city, state, zip, isDefault
+            };
+
+            if (isDefault) {
+                addresses.forEach(a => a.isDefault = false);
+            }
+
+            if (index !== '') {
+                addresses[index] = newAddr;
+            } else {
+                addresses.push(newAddr);
+            }
+
+            localStorage.setItem(getUserKey('loopme_addresses'), JSON.stringify(addresses));
+            cargarDirecciones();
+            addressModal.hide();
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Dirección guardada',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        function deleteAddress(index) {
+            Swal.fire({
+                title: '¿Eliminar dirección?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    addresses.splice(index, 1);
+                    localStorage.setItem(getUserKey('loopme_addresses'), JSON.stringify(addresses));
+                    cargarDirecciones();
+                    Swal.fire('Eliminado', 'La dirección ha sido eliminada', 'success');
+                }
+            });
+        }
+
+        // Llamar a cargarDirecciones al iniciar
+        document.addEventListener('DOMContentLoaded', cargarDirecciones);
+    </script>
+</body>
+</html>
