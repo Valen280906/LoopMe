@@ -1,248 +1,232 @@
+# LoopMe - Documentación Técnica del Sistema
 
+## Índice
 
-# LoopMe - Sistema de Gestión e E-Commerce
-
-LoopMe es un sistema web compuesto por un módulo administrativo (Backoffice) para la gestión de inventario, ventas, usuarios y control interno de la tienda; y un módulo público tipo e-commerce para navegación de productos por parte de clientes.
-
----
-
-# 1. División General del Sistema
-
-El sistema está dividido en dos áreas principales:
-
-## Área Privada (Backoffice)
-- Dirigida al personal de la tienda  
-- Requiere autenticación  
-- Controla la operación interna  
-
-## Área Pública (E-Commerce)
-- Dirigida a clientes  
-- No requiere login para navegar  
-- Permite ver productos y comprar  
+1. [Introducción y Descripción General](#introducción-y-descripción-general)
+2. [Arquitectura del Sistema](#arquitectura-del-sistema)
+3. [Tecnologías Utilizadas](#tecnologías-utilizadas)
+4. [Estructura del Proyecto](#estructura-del-proyecto)
+5. [Módulos del Sistema](#módulos-del-sistema)
+6. [Flujo de Datos y Entidades](#flujo-de-datos-y-entidades)
+7. [Base de Datos](#base-de-datos)
+8. [Configuración y Despliegue](#configuración-y-despliegue)
 
 ---
 
-# 2. Roles del Sistema (Área Privada)
+##Introducción y Descripción General
 
-## Administrador
-- Control total del sistema
-- Gestión de usuarios
-- Gestión de productos y precios
-- Gestión de inventario
-- Acceso a reportes y ventas
+**LoopMe** es una plataforma integral de comercio electrónico y gestión de inventario diseñada para operar como una solución completa que abarca desde la experiencia de compra del cliente hasta la administración interna de productos y ventas.
 
+El sistema funciona bajo una arquitectura **Cliente-Servidor**, donde el frontend (interfaz de usuario) se comunica con una API RESTful centralizada alojada en un servidor Node.js. El núcleo del sistema gestiona la autenticación de usuarios (roles de Administrador, Vendedor, Inventario y Cliente), procesamiento de pedidos, control de stock en tiempo real mediante triggers de base de datos y generación de reportes administrativos.
 
----
-
-# 3. Área Privada — Funcionalidades Incluidas
-
-### 3.1 Login de Trabajadores
-- Usuario y contraseña  
-- Validación  
-- Acceso según rol  
-
-### 3.2 Dashboard
-Resumen general:
-- Total de productos
-- Pedidos
-- Ventas resumidas
-- Alertas de stock
-
-### 3.3 Módulo Productos
-- Listar productos
-- Crear producto
-- Editar producto
-- Eliminar producto
-- Categorías
-- Imagen opcional
-- Modificar stock
-
-### 3.5 Pedidos / Ventas
-- Registrar venta
-- Ver pedidos
-- Estado del pedido
-- Detalles del pedido
-
-### 3.6 Pagos
-- Registrar pago
-- Consultar métodos de pago
-- Relación con pedido
-esto se realizara por pasarelas de pago como stripe
-### 3.7 Reportes (Básico)
-- Listado de ventas
-- Productos más vendidos
-
-### 3.8 Gestión de Usuarios 
-- Crear usuarios
-- Asignar roles
-- Activar / desactivar usuario
+### Propósito del Documento
+Este documento técnico está dirigido a desarrolladores y administradores de sistemas. Su objetivo es detallar la estructura interna, los flujos de información y los componentes lógicos que posibilitan la operatividad de LoopMe.
 
 ---
 
-# 3.9 Área Privada — Funcionalidades No Incluidas
-Para definir el alcance, el sistema NO incluye:
-- Facturación fiscal completa  
-- Integración real con Stripe (solo simulación si aplica)  
-- Reportes avanzados tipo BI  
-- Auditoría compleja  
-- Funcionamiento offline  
-- Aplicación móvil  
+## Arquitectura del Sistema
+
+La solución implementa una arquitectura monolítica modularizada con separación lógica entre capas de presentación, negocio y persistencia.
+
+```mermaid
+graph TD
+    subgraph Client_Side ["Capa de Cliente (Frontend)"]
+        PublicUI[Tienda Pública / E-commerce]
+        AdminUI[Panel de Administración]
+    end
+
+    subgraph Server_Side ["Capa de Servidor (Backend)"]
+        API_Gateway[Express Router / API Gateway]
+        Auth_Layer[Middleware de Autenticación JWT]
+        Business_Logic[Controladores de Negocio]
+        Static_Server[Servidor de Archivos Estáticos]
+    end
+
+    subgraph Persistence_Layer ["Capa de Persistencia"]
+        MySQL_DB[(Base de Datos MySQL)]
+        FileSystem[Almacenamiento Local (Imágenes)]
+    end
+
+    PublicUI -->|HTTP Requests| API_Gateway
+    AdminUI -->|HTTP Requests / Auth| API_Gateway
+    API_Gateway --> Auth_Layer
+    Auth_Layer --> Business_Logic
+    Business_Logic -->|SQL Queries| MySQL_DB
+    Business_Logic -->|File I/O| FileSystem
+    Static_Server -->|Serve Clients| Client_Side
+```
 
 ---
 
-# 4. Área Pública (Clientes) — Funcionalidades Incluidas
+## Tecnologías Utilizadas
 
-### 4.1 Página Principal (Home)
-- Presentación de la tienda
-- Acceso a tienda
-
-### 4.2 Tienda
-- Visualización de productos
-- Filtros por categoría
-- Búsqueda
-- Ver disponibilidad
-
-### 4.3 Detalle de Producto
-- Información
-- Precio
-- Stock disponible
-
-### 4.4 Carrito de Compras
-- Agregar productos
-- Eliminar productos
-- Modificar cantidad
-
-### 4.5 Checkout
-- Registro de datos del cliente
-- Confirmación de compra
+*   **Runtime Environment**: Node.js
+*   **Framework Backend**: Express.js
+*   **Base de Datos**: MySQL
+*   **Autenticación**: JSON Web Tokens (JWT) & bcrypt
+*   **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+*   **Manejo de Archivos**: Multer
+*   **Generación de Documentos**: jsPDF, html2canvas
+*   **Pagos**: Stripe API Integration
 
 ---
 
-# 4.6 Área Pública — Funcionalidades No Incluidas
-- Sistema complejo de cuentas cliente  
-- Historial de compras del cliente  
-- Sistema avanzado de envíos  
-- Pagos reales por pasarela (se puede simular si es necesario)  
+## Estructura del Proyecto
+
+El proyecto sigue una estructura semántica donde el código backend y frontend se encuentran claramente diferenciados.
+
+```bash
+LoopMe/
+├── backend/                  # Lógica del servidor y API
+│   ├── middleware/           # Middlewares (Auth, CORS, Roles)
+│   ├── routes/               # Definición de rutas de la API
+│   ├── db.js                 # Configuración de conexión a BD
+│   ├── multerConfig.js       # Configuración de subida de archivos
+│   ├── server.js             # Punto de entrada principal
+│   └── *.js                  # Scripts de utilidades y migración
+├── fronted/                  # Código fuente del cliente
+│   ├── admin/                # SPA para el panel administrativo
+│   │   ├── *.html            # Vistas administrativas
+│   │   └── ...
+│   ├── public/               # Tienda pública accesible a clientes
+│   │   ├── *.html            # Vistas de la tienda
+│   │   ├── css/              # Estilos globales
+│   │   ├── js/               # Lógica de cliente
+│   │   ├── img/              # Assets gráficos
+│   │   └── uploads/          # Directorio de imágenes de productos
+├── sql.sql                   # Script de definición de esquema BD
+├── package.json              # Dependencias y scripts del proyecto
+└── readme.md                 # Documentación técnica
+```
 
 ---
 
-# 5. Tecnologías Utilizadas
+## Módulos del Sistema
 
-- Node.js  
-- Express  
-- MySQL  
-- Bootstrap  
-- HTML / CSS / JavaScript  
-- JWT (Autenticación)
+### 1. Servidor Principal (`server.js`)
+Punto de entrada que inicializa la aplicación Express. Configura:
+*   **CORS**: Permite peticiones cruzadas controladas.
+*   **Static Serving**: Sirve los archivos del frontend (`/public`, `/admin`) y las imágenes subidas (`/uploads`).
+*   **Routing**: Delega las peticiones a los sub-routers en `/api`.
 
----
+### 2. Gestión de Productos (`routes/products.js`)
+Módulo encargado del ciclo de vida de los productos.
+*   **Entradas**: Datos `multipart/form-data` (texto + imagen).
+*   **Proceso**:
+    *   Valida tipos de datos y permisos de administrador.
+    *   Guarda la imagen en disco mediante Multer.
+    *   Actualiza las tablas `productos` e `inventario` transaccionalmente.
+*   **Salidas**: JSON con el estado de la operación y el objeto creado/actualizado.
 
-# 6. Backend y Autenticación
+### 3. Autenticación y Autorización
+Utiliza JWT para proteger rutas sensibles.
+*   **Middleware `auth.js`**: Verifica la firma y validez del token en el header `Authorization`.
+*   **Middleware `isAdmin.js`**: Verifica que el rol del usuario decodificado sea 'Administrador'.
 
-El backend funciona bajo una arquitectura cliente-servidor utilizando Node.js y Express.
+### 4. Sistema de Inventario y Alertas
+Lógica híbrida entre aplicación y base de datos.
+*   **Triggers de BD**:
+    *   `tr_update_stock_after_sale`: Reduce stock automáticamente al crear detalles de pedido.
+    *   `tr_mark_low_stock`: Marca automáticamente el flag de "Stock Bajo" si cruza el umbral definido.
 
-Se estableció conexión real con MySQL utilizando `mysql2`.
-
-Se implementó autenticación segura basada en JSON Web Tokens (JWT).  
-Al iniciar sesión:
-
-1. El backend valida credenciales en MySQL.
-2. Genera un token JWT firmado.
-3. El token contiene:
-   - id del usuario
-   - nombre
-   - rol
-4. El token es enviado al frontend.
-5. El token se usa para acceder a secciones privadas.
-
-Este esquema permite proteger rutas, validar roles y mantener sesiones sin almacenar información en servidor.
-
----
-
-# 7. Estructura del Proyecto
+### 5. Reportes
+Generación de informes para la toma de decisiones.
+*   Implementación en frontend (`reportes.html`) que consume datos agregados del backend.
+*   Funcionalidad de exportación a PDF utilizando librerías de cliente para renderizar tablas y gráficos.
 
 ---
 
-# 8. Usuario Administrador Inicial
+## Flujo de Datos y Entidades
 
-Se crea manualmente en la BD:
+### Entidades Principales
 
-email: admin@loopme.com
+| Entidad | Descripción | Atributos Clave |
+| :--- | :--- | :--- |
+| **Usuario** | Operadores del sistema administrativo. | `id`, `email`, `password` (hash), `rol`. |
+| **Cliente** | Usuarios finales de la tienda. | `id`, `email`, `password`, `datos_envio`. |
+| **Producto** | Artículos a la venta. | `id`, `precio`, `categoria_id`, `imagen_url`. |
+| **Inventario** | Estado del stock de un producto. | `producto_id`, `stock_actual`, `stock_minimo`. |
+| **Pedido** | Transacción de compra. | `id`, `cliente_id`, `estado`, `total`. |
 
-password: 1234
-rol: Administrador
-
-
-Este usuario es el responsable de crear:
-- Usuarios Vendedor
-- Usuarios Inventario
-
----
-
-# 9. Ejecución del Sistema
-
-## 1) Iniciar Backend
-Dentro del proyecto ejecutar:
-
-node backend/server.js
-Debe mostrar:
-"Backend corriendo en puerto 3000
-Conectado a MySQL"
+### Flujo de Creación de Pedido (Checkout)
+1.  **Entrada**: Cliente envía `POST /api/orders` con lista de productos y datos de envío.
+2.  **Validación**: Backend verifica stock disponible para cada ítem.
+3.  **Persistencia**:
+    *   Se crea registro en `pedidos`.
+    *   Se insertan `detalles_pedido`.
+4.  **Autómata BD**: Trigger `tr_update_stock_after_sale` desconta stock y genera alerta si es necesario.
+5.  **Respuesta**: ID de pedido y confirmación para redirección a pasarela/éxito.
 
 ---
 
-## 2) Login
-Abrir desde navegador:
-`login.html`
-Ingresar:
-admin@loopme.com
-1234
+## Base de Datos
 
-Tras un login exitoso:
-- Se genera token JWT
-- Se guarda en localStorage
-- Se redirige a dashboard
-- El sistema queda autenticado
----
-# 10. Verificación de Seguridad JWT
-Ruta protegida:http://localhost:3000/api/secure/check
-Petición se realiza con:
-Authorization: Bearer TOKEN
+El sistema utiliza MySQL con motor **InnoDB** para garantizar integridad referencial. El esquema se define en `sql.sql`.
 
-Si el token es válido:
-- Acceso permitido
-- Devuelve datos del usuario
+### Diagrama ER (Simplificado)
 
-Si no:
-- Token requerido
-- Token inválido
-- Token expirado
+```mermaid
+erDiagram
+    USUARIOS {
+        int id PK
+        string email
+        enum rol
+    }
+    PRODUCTOS ||--o| INVENTARIO : tiene
+    PRODUCTOS }|--|| CATEGORIAS : pertenece_a
+    PEDIDOS }|--|| CLIENTES : realiza
+    PEDIDOS ||--|{ DETALLES_PEDIDO : contiene
+    DETALLES_PEDIDO }|--|| PRODUCTOS : referencia
+    ALERTAS_STOCK }|--|| PRODUCTOS : sobre
 
----
-
-# 11. Justificación del Diseño
-
-El sistema se divide en un módulo administrativo interno para la gestión de inventario, productos, ventas y usuarios, y un módulo público orientado a clientes para visualización de productos y compras. Esta separación garantiza seguridad, organización y claridad operativa entre la gestión interna de la tienda y la experiencia del cliente.
-
-Para la autenticación del sistema LoopMe se decidió implementar un esquema basado en JWT debido a que el sistema funciona bajo una arquitectura cliente-servidor con frontend independiente. JWT permite manejar sesiones seguras sin almacenamiento de sesión en el servidor, mejora el control por roles y facilita la escalabilidad futura.
+    PRODUCTOS {
+        int id PK
+        decimal precio
+        string imagen_url
+        boolean activo
+    }
+    INVENTARIO {
+        int stock_actual
+        int stock_minimo
+        boolean stock_bajo
+    }
+```
 
 ---
 
+## ⚙ Configuración y Despliegue
 
-Pago exitoso:
+### Requisitos Previos
+*   Node.js v14+
+*   MySQL Server 5.7+ o 8.0+
 
-Número: 4242 4242 4242 4242
+### Variables de Entorno (.env)
+Crear un archivo `.env` en `backend/` con las siguientes claves:
 
-Fecha: Cualquier fecha futura
+```env
+PORT=3000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=tu_password
+DB_NAME=loopme
+JWT_SECRET=tu_secreto_seguro
+STRIPE_SECRET_KEY=sk_test_...
+```
 
-CVV: Cualquier 3 dígitos
+### Pasos de Instalación
 
-Código postal: Cualquier 5 dígitos
+1.  **Base de Datos**: Importar `sql.sql` en su servidor MySQL para crear esquema y datos semilla.
+    ```sql
+    source /ruta/a/LoopMe/sql.sql;
+    ```
+2.  **Dependencias**: Instalar paquetes NPM.
+    ```bash
+    npm install
+    ```
+3.  **Ejecución**:
+    *   Modo desarrollo: `npm run dev` (si script configurado) o `node backend/server.js`.
+    *   El servidor iniciará en `http://localhost:3000`.
 
-Pago rechazado:
-
-Número: 4000 0000 0000 9995
-
-Requiere autenticación 3D Secure:
-
-Número: 4000 0025 0000 3155
+### Verificación
+*   Acceder a `http://localhost:3000/admin` para panel administrativo (Credenciales por defecto en `sql.sql`).
+*   Acceder a `http://localhost:3000/` para ver la tienda pública.
