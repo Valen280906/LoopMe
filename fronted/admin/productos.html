@@ -135,7 +135,9 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Nombre *</label>
-                                    <input type="text" id="nombre" class="form-control" required>
+                                    <input type="text" id="nombre" class="form-control" maxlength="80" 
+                                        onbeforeinput="bloquearCaracteres(event, /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]*$/)" 
+                                        required>
                                 </div>
 
                                 <div class="mb-3">
@@ -163,6 +165,15 @@
                                                 <option value="XL">XL</option>
                                                 <option value="XXL">XXL</option>
                                                 <option value="Única">Única</option>
+                                                <option disabled>── Calzado ──</option>
+                                                <option value="34">34</option>
+                                                <option value="35">35</option>
+                                                <option value="36">36</option>
+                                                <option value="37">37</option>
+                                                <option value="38">38</option>
+                                                <option value="39">39</option>
+                                                <option value="40">40</option>
+                                                <option value="41">41</option>
                                             </select>
                                         </div>
                                     </div>
@@ -172,7 +183,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Color</label>
-                                    <input type="text" id="color" class="form-control">
+                                    <input type="text" id="color" class="form-control" maxlength="50" 
+                                        onbeforeinput="bloquearCaracteres(event, /^[a-zA-ZáéíóúÁÉÍÓÚñÑ ,]*$/)">
                                 </div>
 
                                 <div class="mb-3">
@@ -305,6 +317,13 @@
         let productos = [];
         let categorias = [];
 
+        // Función para bloquear caracteres en tiempo real
+        function bloquearCaracteres(event, regex) {
+            if (event.data && !regex.test(event.data)) {
+                event.preventDefault();
+            }
+        }
+
         // Verificar autenticación al cargar
         window.onload = function () {
             verificarAutenticacion();
@@ -325,7 +344,7 @@
             usuario = JSON.parse(userData);
 
             // Verificar token con el servidor
-            fetch("http://localhost:3000/api/auth/verify", {
+            fetch("/api/auth/verify", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -375,14 +394,14 @@
                 if (result.isConfirmed) {
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
-                    window.location.href = "login.html";
+                    window.location.href = "../index.html";
                 }
             });
         }
 
         // Cargar categorías
         function cargarCategorias() {
-            fetch("http://localhost:3000/api/categories")
+            fetch("/api/categories")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.categorias) {
@@ -407,7 +426,7 @@
 
         // Cargar productos
         function cargarProductos() {
-            fetch("http://localhost:3000/api/products")
+            fetch("/api/products")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.productos) {
@@ -448,7 +467,7 @@
                 // Construir URL completa para la imagen
                 let imagenUrl = producto.imagen_url;
                 if (imagenUrl && !imagenUrl.startsWith('http')) {
-                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                    imagenUrl = '' + imagenUrl;
                 }
 
                 const imagen = imagenUrl ?
@@ -549,10 +568,24 @@
                 return;
             }
 
+            // Validaciones de caracteres (Regex)
+            const nombreRegex = /^[a-zA-Z0-9\sáéíóúÁÉÍÓÚñÑ ]+$/;
+            const colorRegex = /^[a-zA-Z\sáéíóúÁÉÍÓÚñÑ ,]+$/;
+
+            if (!nombreRegex.test(formData.get('nombre').trim())) {
+                Swal.fire('Formato inválido', 'El nombre solo permite letras, números y espacios', 'warning');
+                return;
+            }
+
+            if (formData.get('color') && formData.get('color').trim() && !colorRegex.test(formData.get('color').trim())) {
+                Swal.fire('Formato inválido', 'El color solo permite letras, espacios y comas', 'warning');
+                return;
+            }
+
             // Usar la ruta correcta: /api/products
             const url = productoId ?
-                `http://localhost:3000/api/products/${productoId}` :
-                'http://localhost:3000/api/products';
+                `/api/products/${productoId}` :
+                '/api/products';
 
             const metodo = productoId ? 'PUT' : 'POST';
 
@@ -602,7 +635,7 @@
                 return;
             }
 
-            fetch(`http://localhost:3000/api/products/${id}`)
+            fetch(`/api/products/${id}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.producto) {
@@ -629,7 +662,7 @@
                         if (imagenUrl) {
                             // Si es una ruta relativa, agregar la URL base para mostrar
                             if (imagenUrl && !imagenUrl.startsWith('http')) {
-                                imagenUrl = 'http://localhost:3000' + imagenUrl;
+                                imagenUrl = '' + imagenUrl;
                             }
                             preview.innerHTML = `<img src="${imagenUrl}" class="img-thumbnail" style="max-width: 200px;">`;
                         } else {
@@ -661,7 +694,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     // Usar la ruta correcta: /api/admin/products/id
-                    fetch(`http://localhost:3000/api/products/${id}`, {
+                    fetch(`/api/products/${id}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -690,7 +723,7 @@
 
         // Ver detalles del producto
         function verDetalles(id) {
-            fetch(`http://localhost:3000/api/products/${id}`)
+            fetch(`/api/products/${id}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.producto) {
@@ -699,7 +732,7 @@
                         // Construir URL completa para la imagen
                         let imagenUrl = producto.imagen_url;
                         if (imagenUrl && !imagenUrl.startsWith('http')) {
-                            imagenUrl = 'http://localhost:3000' + imagenUrl;
+                            imagenUrl = '' + imagenUrl;
                         }
 
                         // Llenar el modal con los datos

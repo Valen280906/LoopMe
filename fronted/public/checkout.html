@@ -15,6 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
+    <script src="js/auth.js"></script>
     <style>
         .checkout-container {
             margin-top: 40px;
@@ -673,34 +674,33 @@
 
         // Inicializar Stripe
         document.addEventListener('DOMContentLoaded', function () {
-            verificarAutenticacion();
+            // PROTEGER RUTA: Solo clientes autenticados
+            if (!verificarSesion()) {
+                redirigirSiNoAutenticado();
+                return;
+            }
+
+            verificarAutenticacionUI();
             cargarCarrito();
             cargarDatosCliente();
             inicializarStripe();
             inicializarFormulario();
         });
 
-        // Verificar autenticación
-        function verificarAutenticacion() {
-            const token = localStorage.getItem("cliente_token");
-            const clienteData = localStorage.getItem("cliente_info");
+        // Verificar autenticación y actualizar UI
+        function verificarAutenticacionUI() {
+            const clienteData = getClienteInfo();
             const loginLink = document.getElementById("loginLink");
 
-            if (token && clienteData) {
-                try {
-                    clienteInfo = JSON.parse(clienteData);
-                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre.split(' ')[0]}`;
-                    loginLink.href = "javascript:void(0)";
+            if (clienteData) {
+                clienteInfo = clienteData;
+                loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre.split(' ')[0]}`;
+                loginLink.href = "javascript:void(0)";
 
-                    loginLink.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        mostrarMenuUsuario();
-                    });
-                } catch (e) {
-                    redirigirSiNoAutenticado();
-                }
-            } else {
-                redirigirSiNoAutenticado();
+                loginLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    mostrarMenuUsuario();
+                });
             }
         }
 
@@ -1001,7 +1001,7 @@
 
                 // 1. Crear Payment Intent
                 console.log("3. Creando Payment Intent...");
-                const paymentIntentResponse = await fetch('http://localhost:3000/api/payments/create-payment-intent', {
+                const paymentIntentResponse = await fetch('/api/payments/create-payment-intent', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1127,7 +1127,7 @@
                     }
                 };
 
-                const response = await fetch('http://localhost:3000/api/orders/create', {
+                const response = await fetch('/api/orders/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

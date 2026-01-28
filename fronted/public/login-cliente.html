@@ -156,7 +156,7 @@
             const token = localStorage.getItem("cliente_token");
             if (token) {
                 // Verificar si el token es válido
-                fetch("http://localhost:3000/api/auth/verify", {
+                fetch("/api/auth/verify", {
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
@@ -205,7 +205,7 @@
             submitBtn.disabled = true;
 
             // Enviar datos al servidor
-            fetch("http://localhost:3000/api/auth/login-cliente", {
+            fetch("/api/auth/login-cliente", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json" 

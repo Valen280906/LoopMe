@@ -442,7 +442,7 @@
         // Obtener detalles del pedido
         async function obtenerDetallesPedido() {
             try {
-                const response = await fetch(`http://localhost:3000/api/orders/payment-intent/${paymentIntentId}`, {
+                const response = await fetch(`/api/orders/payment-intent/${paymentIntentId}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem("cliente_token")}`
                     }

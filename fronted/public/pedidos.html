@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/auth.js"></script>
     <!-- Estilos LoopMe -->
     <link rel="stylesheet" href="css/public.css">
     <style>
@@ -255,36 +256,31 @@
         let token = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            verificarAutenticacion();
+            // PROTEGER RUTA: Solo clientes autenticados
+            if (!verificarSesion(true)) return;
+
+            verificarAutenticacionUI();
             cargarMisPedidos();
         });
 
-        function verificarAutenticacion() {
+        function verificarAutenticacionUI() {
             token = localStorage.getItem("cliente_token");
-            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
+            const clienteInfo = getClienteInfo();
             const loginLink = document.getElementById("loginLink");
 
-            if (!token) {
-                // Si no hay token, redirigir a login o mostrar opción
-                document.getElementById('tablaPedidos').innerHTML = `
-                    <tr><td colspan="5" class="text-center py-4">
-                        Debes <a href="login-cliente.html">iniciar sesión</a> para ver tus pedidos.
-                    </td></tr>
-                `;
-                loginLink.href = "login-cliente.html";
-                return;
+            if (clienteInfo) {
+                // Configurar menú usuario
+                loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre?.split(' ')[0] || 'Cliente'}`;
+                loginLink.href = "#";
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    mostrarMenuUsuario(clienteInfo);
+                });
             }
-
-            // Configurar menú usuario
-            loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre?.split(' ')[0] || 'Cliente'}`;
-            loginLink.href = "#";
-            loginLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                mostrarMenuUsuario(clienteInfo);
-            });
         }
 
         function cargarMisPedidos() {
+            token = localStorage.getItem("cliente_token");
             if (!token) return;
 
             fetch("/api/orders/my-orders", {

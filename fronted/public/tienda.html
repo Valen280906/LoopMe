@@ -328,6 +328,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
 
     <!-- Modal de Políticas y Términos -->
     <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
@@ -395,51 +396,31 @@
 
         // Cargar productos al inicio
         document.addEventListener('DOMContentLoaded', function() {
-            verificarAutenticacion();
+            verificarAutenticacionUI();
             cargarCategorias();
             cargarProductosAleatorios();
             actualizarContadorCarrito();
         });
 
-        // Verificar autenticación
-        function verificarAutenticacion() {
-            const token = localStorage.getItem("cliente_token");
-            const clienteInfo = localStorage.getItem("cliente_info");
+        // Verificar autenticación y actualizar UI
+        function verificarAutenticacionUI() {
             const loginLink = document.getElementById("loginLink");
+            const cliente = getClienteInfo();
             
-            if (token && clienteInfo) {
-                try {
-                    const cliente = JSON.parse(clienteInfo);
-                    clienteAutenticado = true;
-                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${cliente.nombre}`;
-                    loginLink.href = "javascript:void(0)";
-                    
-                    // Agregar opción de cerrar sesión
-                    loginLink.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        mostrarMenuUsuario();
-                    });
-                } catch(e) {
-                    console.error("Error al parsear cliente info:", e);
-                    clienteAutenticado = false;
-                    loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
-                    loginLink.href = "login-cliente.html";
-                }
+            if (cliente) {
+                clienteAutenticado = true;
+                loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${cliente.nombre}`;
+                loginLink.href = "javascript:void(0)";
+                
+                // Agregar opción de cerrar sesión
+                loginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarMenuUsuario();
+                });
             } else {
+                clienteAutenticado = false;
                 loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
                 loginLink.href = "login-cliente.html";
-            }
-        }
-
-        // Helper to get user-scoped key
-        function getUserKey(baseKey) {
-            const clienteInfo = localStorage.getItem("cliente_info");
-            if (!clienteInfo) return baseKey;
-            try {
-                const cliente = JSON.parse(clienteInfo);
-                return cliente.email ? `${baseKey}_${cliente.email}` : baseKey;
-            } catch(e) {
-                return baseKey;
             }
         }
 
@@ -447,7 +428,7 @@
         function mostrarMenuUsuario() {
             if (!clienteAutenticado) return;
             
-            const cliente = JSON.parse(localStorage.getItem("cliente_info"));
+            const cliente = getClienteInfo();
             
             // Crear menú desplegable
             const menuHTML = `
@@ -497,29 +478,9 @@
             });
         }
 
-        // Cerrar sesión de cliente
-        function logoutCliente() {
-            Swal.fire({
-                title: '¿Cerrar sesión?',
-                text: "Esperamos verte pronto por LoopMe",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#764ba2',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, salir',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem("cliente_token");
-                    localStorage.removeItem("cliente_info");
-                    window.location.href = "tienda.html";
-                }
-            });
-        }
-
         // Cargar categorías
         function cargarCategorias() {
-            fetch("http://localhost:3000/api/categories")
+            fetch("/api/categories")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.categorias) {
@@ -554,7 +515,7 @@
 
         // Cargar productos aleatorios
         function cargarProductosAleatorios() {
-            fetch("http://localhost:3000/api/products")
+            fetch("/api/products")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.productos) {
@@ -615,7 +576,7 @@
                 // URL de imagen
                 let imagenUrl = producto.imagen_url;
                 if (imagenUrl && !imagenUrl.startsWith('http')) {
-                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                    imagenUrl = '' + imagenUrl;
                 }
                 
                 // Verificar si está en el carrito
@@ -854,6 +815,24 @@
 
         // Función para manejar favoritos (Scoped to User)
         function toggleFavorite(id, event) {
+            // PROTEGER FAVORITOS: Solo clientes autenticados
+            if (!verificarSesion()) {
+                Swal.fire({
+                    title: '¡Añade a favoritos!',
+                    text: 'Crea una cuenta para guardar tus prendas favoritas.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Iniciar Sesión',
+                    cancelButtonText: 'Después',
+                    confirmButtonColor: '#764ba2'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'login-cliente.html';
+                    }
+                });
+                return;
+            }
+
             // Evitar que el clic propague al enlace del producto si hubiera uno
             if(event) {
                 event.stopPropagation();

@@ -170,7 +170,7 @@
         };
 
         function cargarTopProducts() {
-            fetch("http://localhost:3000/api/reports/top-products", {
+            fetch("/api/reports/top-products", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -211,7 +211,7 @@
         }
 
         function cargarAlertasStock() {
-            fetch("http://localhost:3000/api/reports/stock-alerts", {
+            fetch("/api/reports/stock-alerts", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -430,7 +430,7 @@
         function logout() {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-            window.location.href = "login.html";
+            window.location.href = "../index.html";
         }
     </script>
 </body>

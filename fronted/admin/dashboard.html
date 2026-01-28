@@ -280,14 +280,14 @@
                 if (result.isConfirmed) {
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
-                    window.location.href = "login.html";
+                    window.location.href = "../index.html";
                 }
             });
         }
 
         // Cargar estadísticas
         function cargarEstadisticas() {
-            fetch("http://localhost:3000/api/reports/dashboard-stats", {
+            fetch("/api/reports/dashboard-stats", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -307,7 +307,7 @@
         function inicializarGrafico() {
             const ctx = document.getElementById('ventasChart').getContext('2d');
 
-            fetch("http://localhost:3000/api/reports/sales-chart", {
+            fetch("/api/reports/sales-chart", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -349,7 +349,7 @@
 
         // Cargar alertas recientes (Dinamismo solicitado)
         function cargarAlertas() {
-            fetch("http://localhost:3000/api/reports/recent-alerts", {
+            fetch("/api/reports/recent-alerts", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
             .then(res => res.json())

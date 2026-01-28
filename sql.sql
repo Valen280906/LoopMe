@@ -14,7 +14,7 @@ CREATE TABLE usuarios (
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-net start MySQL95
+
 
 
 -- CLIENTES

@@ -633,7 +633,7 @@
             // Mostrar loading
             document.getElementById("loadingImage").style.display = "block";
             
-            fetch(`http://localhost:3000/api/products/${productId}`)
+            fetch(`/api/products/${productId}`)
                 .then(response => {
                     console.log("Fetch status:", response.status); 
                     if (!response.ok) {
@@ -718,7 +718,7 @@
             // URL de imagen principal
             let mainImageUrl = productoActual.imagen_url;
             if (mainImageUrl && !mainImageUrl.startsWith('http')) {
-                mainImageUrl = 'http://localhost:3000' + mainImageUrl;
+                mainImageUrl = '' + mainImageUrl;
             }
             
             // Imagen principal
@@ -869,7 +869,7 @@
         function cargarProductosRelacionados() {
             if (!productoActual) return;
             
-            fetch("http://localhost:3000/api/products")
+            fetch("/api/products")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.productos) {
@@ -905,7 +905,7 @@
             relatedProducts.forEach(producto => {
                 let imagenUrl = producto.imagen_url;
                 if (imagenUrl && !imagenUrl.startsWith('http')) {
-                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                    imagenUrl = '' + imagenUrl;
                 }
                 
                 html += `

@@ -338,7 +338,7 @@
             submitBtn.disabled = true;
 
             // Enviar datos al servidor
-            fetch("http://localhost:3000/api/auth/registro-cliente", {
+            fetch("/api/auth/registro-cliente", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json" 

@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
+    <script src="js/auth.js"></script>
     <style>
         .favorites-header {
             background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
@@ -211,34 +212,27 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            verificarAutenticacion();
+            // PROTEGER RUTA: Solo clientes autenticados
+            if (!verificarSesion(true)) return;
+
+            verificarAutenticacionUI();
             cargarFavoritos();
             actualizarContadorCarrito();
         });
 
-        // Verificar autenticación
-        function verificarAutenticacion() {
-            const token = localStorage.getItem("cliente_token");
-            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
+        // Verificar autenticación y actualizar UI
+        function verificarAutenticacionUI() {
+            const clienteInfo = getClienteInfo();
             const loginLink = document.getElementById("loginLink");
             
-            if (token && clienteInfo.nombre) {
+            if (clienteInfo) {
                 loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre.split(' ')[0]}`;
                 loginLink.href = "#";
                 loginLink.addEventListener('click', (e) => {
                     e.preventDefault();
                     mostrarMenuUsuario(clienteInfo);
                 });
-            } else {
-                loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
-                loginLink.href = "login-cliente.html";
             }
-        }
-
-        // Helper to get user-scoped key
-        function getUserKey(baseKey) {
-            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
-            return clienteInfo && clienteInfo.email ? `${baseKey}_${clienteInfo.email}` : baseKey;
         }
 
         // Cargar favoritos
@@ -260,7 +254,7 @@
             favoritos.forEach((item, index) => {
                 let imgUrl = item.imagen || item.imagen_url;
                 if(imgUrl && !imgUrl.startsWith('http')) {
-                    imgUrl = 'http://localhost:3000' + imgUrl;
+                    imgUrl = '' + imgUrl;
                 }
                 
                 html += `
@@ -397,24 +391,6 @@
             });
         }
         
-        function logoutCliente() {
-            Swal.fire({
-                title: '¿Cerrar sesión?',
-                text: "Esperamos verte pronto por LoopMe",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#764ba2',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, salir',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem("cliente_token");
-                    localStorage.removeItem("cliente_info");
-                    window.location.href = "tienda.html";
-                }
-            });
-        }
     </script>
 </body>
 </html>

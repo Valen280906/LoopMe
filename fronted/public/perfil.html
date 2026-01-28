@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Estilos globales LoopMe -->
     <link rel="stylesheet" href="css/public.css">
+    <script src="js/auth.js"></script>
     <style>
         .profile-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -353,24 +354,61 @@
         let clienteData = {};
         
         document.addEventListener('DOMContentLoaded', () => {
-            verificarAutenticacion();
+            // PROTEGER RUTA: Solo clientes autenticados
+            if (!verificarSesion(true)) return;
+
+            verificarAutenticacionUI();
             cargarDatosPerfil();
             actualizarContadorCarrito();
         });
 
-        function verificarAutenticacion() {
-            const token = localStorage.getItem("cliente_token");
-            if (!token) {
-                window.location.href = "login-cliente.html";
-                return;
+        function verificarAutenticacionUI() {
+            const clienteInfo = getClienteInfo();
+            const loginLink = document.getElementById("loginLink");
+
+            if (clienteInfo) {
+                clienteData = clienteInfo;
+                // Configurar menú usuario
+                loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${clienteInfo.nombre?.split(' ')[0] || 'Cliente'}`;
+                loginLink.href = "#";
+                loginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    mostrarMenuUsuario(clienteInfo);
+                });
             }
-            const clienteInfo = JSON.parse(localStorage.getItem("cliente_info") || '{}');
-            clienteData = clienteInfo;
         }
 
-        // Helper to get user-scoped key
-        function getUserKey(baseKey) {
-            return clienteData && clienteData.email ? `${baseKey}_${clienteData.email}` : baseKey;
+        // Reutilizar loginLink para menu (opcional pero bueno para consistencia)
+        function mostrarMenuUsuario(cliente) {
+             const menuHTML = `
+                <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
+                    <div class="dropdown-header">
+                        <strong>${cliente.nombre}</strong>
+                        <p class="mb-0 text-muted small">${cliente.email}</p>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="pedidos.html"><i class="fas fa-clipboard-list me-2"></i>Mis Pedidos</a>
+                    <a class="dropdown-item" href="favoritos.html"><i class="fas fa-heart me-2"></i>Favoritos</a>
+                    <a class="dropdown-item active" href="perfil.html"><i class="fas fa-user-edit me-2"></i>Mi Perfil</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="#" onclick="logoutCliente()"><i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión</a>
+                </div>
+            `;
+            const loginLink = document.getElementById("loginLink");
+            let dropdownMenu = loginLink.nextElementSibling;
+            if (!dropdownMenu || !dropdownMenu.classList.contains("dropdown-menu")) {
+                dropdownMenu = document.createElement("div");
+                dropdownMenu.className = "dropdown-menu";
+                loginLink.parentElement.appendChild(dropdownMenu);
+            }
+            dropdownMenu.innerHTML = menuHTML;
+            dropdownMenu.classList.add("show");
+            document.addEventListener('click', function closeMenu(e) {
+                if (!loginLink.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove("show");
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
         }
 
         function cargarDatosPerfil() {
@@ -401,13 +439,24 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.pedidos) {
-                    document.getElementById('statsOrders').textContent = data.pedidos.length;
+                    const orderCount = data.pedidos.length;
+                    document.getElementById('statsOrders').textContent = orderCount;
+                    
+                    // Cálculo de nivel dinámico
+                    let level = "Bronce";
+                    if (orderCount >= 20) {
+                        level = "Oro";
+                    } else if (orderCount >= 10) {
+                        level = "Plata";
+                    }
+                    
+                    document.getElementById('statsPoints').textContent = level;
                 }
             })
-            .catch(err => console.error("Error fetching orders count:", err));
-            
-            // Simulación de nivel
-            document.getElementById('statsPoints').textContent = "Bronce";
+            .catch(err => {
+                console.error("Error fetching orders count:", err);
+                document.getElementById('statsPoints').textContent = "Bronce";
+            });
         }
         
         function toggleEditMode() {
@@ -459,31 +508,7 @@
             cargarDatosPerfil(); // Refresh menu
         });
 
-        function logoutCliente() {
-            Swal.fire({
-                title: '¿Cerrar sesión?',
-                text: "Esperamos verte pronto por LoopMe",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#764ba2',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, salir',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem("cliente_token");
-                    localStorage.removeItem("cliente_info");
-                    window.location.href = "tienda.html";
-                }
-            });
-        }
-        
-        function actualizarContadorCarrito() {
-            const carrito = JSON.parse(localStorage.getItem('carrito') || '[]');
-            const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
-            const badge = document.getElementById('cartCount');
-            if(badge) badge.innerText = totalItems;
-        }
+        // --- Gestión de Direcciones ---
 
         // --- Gestión de Direcciones ---
         let addresses = [];

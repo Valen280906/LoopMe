@@ -1,0 +1,17 @@
+id: int
+nombre: varchar(150)
+descripcion: text
+precio: decimal(10,2)
+talla: varchar(50)
+color: varchar(50)
+activo: tinyint(1)
+categoria_id: int
+imagen_url: varchar(255)
+
+INVENTARIO:
+id: int
+producto_id: int
+stock_actual: int
+stock_minimo: int
+stock_bajo: tinyint(1)
+ultima_actualizacion: datetime

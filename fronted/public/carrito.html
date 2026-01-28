@@ -417,6 +417,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/auth.js"></script>
 
     <!-- Modal de Políticas y Términos -->
     <div class="modal fade" id="policyModal" tabindex="-1" aria-hidden="true">
@@ -484,52 +485,36 @@
 
         // Cargar carrito al iniciar
         document.addEventListener('DOMContentLoaded', function() {
-            verificarAutenticacion();
+            // PROTEGER RUTA: Solo clientes autenticados
+            if (!verificarSesion(true)) return;
+
+            verificarAutenticacionUI();
             cargarCarrito();
             actualizarContadorCarrito();
         });
 
-        // Verificar autenticación
-        function verificarAutenticacion() {
-            const token = localStorage.getItem("cliente_token");
-            const clienteInfo = localStorage.getItem("cliente_info");
+        // Verificar autenticación y actualizar UI
+        function verificarAutenticacionUI() {
             const loginLink = document.getElementById("loginLink");
+            const cliente = getClienteInfo();
             
-            if (token && clienteInfo) {
-                try {
-                    const cliente = JSON.parse(clienteInfo);
-                    loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${cliente.nombre.split(' ')[0]}`;
-                    loginLink.href = "javascript:void(0)";
-                    
-                    loginLink.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        mostrarMenuUsuario();
-                    });
-                } catch(e) {
-                    loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
-                    loginLink.href = "login-cliente.html";
-                }
+            if (cliente) {
+                loginLink.innerHTML = `<i class="fas fa-user me-1"></i> ${cliente.nombre.split(' ')[0]}`;
+                loginLink.href = "javascript:void(0)";
+                
+                loginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mostrarMenuUsuario();
+                });
             } else {
                 loginLink.innerHTML = '<i class="fas fa-user"></i> Mi Cuenta';
                 loginLink.href = "login-cliente.html";
             }
         }
 
-        // Helper to get user-scoped key
-        function getUserKey(baseKey) {
-            const clienteInfo = localStorage.getItem("cliente_info");
-            if (!clienteInfo) return baseKey;
-            try {
-                const cliente = JSON.parse(clienteInfo);
-                return cliente.email ? `${baseKey}_${cliente.email}` : baseKey;
-            } catch(e) {
-                return baseKey;
-            }
-        }
-
         // Menú desplegable para usuario autenticado
         function mostrarMenuUsuario() {
-            const cliente = JSON.parse(localStorage.getItem("cliente_info"));
+            const cliente = getClienteInfo();
             const menuHTML = `
                 <div class="dropdown-menu show" style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 40px);">
                     <div class="dropdown-header">
@@ -573,26 +558,6 @@
             });
         }
 
-        // Cerrar sesión
-        function logoutCliente() {
-            Swal.fire({
-                title: '¿Cerrar sesión?',
-                text: "Esperamos verte pronto por LoopMe",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#764ba2',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, salir',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    localStorage.removeItem("cliente_token");
-                    localStorage.removeItem("cliente_info");
-                    window.location.href = "tienda.html";
-                }
-            });
-        }
-
         // Cargar carrito desde localStorage
         function cargarCarrito() {
             // Ocultar loading después de un breve retraso
@@ -628,7 +593,7 @@
             }
             
             // Obtener información de todos los productos
-            fetch("http://localhost:3000/api/products")
+            fetch("/api/products")
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.productos) {
@@ -717,7 +682,7 @@
                 let imagenUrl = item.imagen || producto.imagen_url;
                 
                 if (imagenUrl && !imagenUrl.startsWith('http')) {
-                    imagenUrl = 'http://localhost:3000' + imagenUrl;
+                    imagenUrl = '' + imagenUrl;
                 }
                 
                 const subtotal = item.precio * item.cantidad;
@@ -882,13 +847,24 @@
         function vaciarCarrito() {
             if (carrito.length === 0) return;
             
-            if (confirm("¿Estás seguro de vaciar todo el carrito?")) {
-                carrito = [];
-                guardarCarrito();
-                mostrarCarritoVacio();
-                actualizarContadorCarrito();
-                mostrarNotificacion("Carrito vaciado", "info");
-            }
+            Swal.fire({
+                title: '¿Vaciar carrito?',
+                text: "¿Estás seguro de que deseas eliminar todos los productos del carrito?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#764ba2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, vaciar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    carrito = [];
+                    guardarCarrito();
+                    mostrarCarritoVacio();
+                    actualizarContadorCarrito();
+                    mostrarNotificacion("Carrito vaciado correctamente", "info");
+                }
+            });
         }
 
         // Guardar carrito en localStorage

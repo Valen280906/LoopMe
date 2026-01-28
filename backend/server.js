@@ -7,6 +7,12 @@ const db = require("./db");
 
 const app = express();
 
+// Logger de peticiones
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 // Configuración CORS más flexible
 const allowedOrigins = [
     'http://localhost:3000',
@@ -78,7 +84,7 @@ app.use((err, req, res, next) => {
 // Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Backend LoopMe corriendo en: http://localhost:${PORT}`);
-    console.log(`📂 Archivos frontend servidos desde: fronted/`);
-    console.log(`🔌 Conectado a MySQL: ${process.env.DB_NAME || 'No configurado'}`);
+    console.log(`Backend LoopMe corriendo en: http://localhost:${PORT}`);
+    console.log(`Archivos frontend servidos desde: fronted/`);
+    console.log(`Conectado a MySQL: ${process.env.DB_NAME || 'No configurado'}`);
 });

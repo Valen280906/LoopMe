@@ -93,7 +93,9 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Contraseña *</label>
-                                    <input type="password" id="password" class="form-control" placeholder="Contraseña">
+                                    <input type="password" id="password" class="form-control" 
+                                        placeholder="Min. 8 caracteres, 1 Mayus, 1 Minus">
+                                    <small class="text-muted">Mínimo 8 caracteres, una mayúscula y una minúscula</small>
                                 </div>
 
                                 <div class="mb-3">
@@ -179,7 +181,7 @@
             }
 
             // Verificar token con el servidor
-            fetch("http://localhost:3000/api/auth/verify", {
+            fetch("/api/auth/verify", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -213,14 +215,14 @@
                 if (result.isConfirmed) {
                     localStorage.removeItem("token");
                     localStorage.removeItem("user");
-                    window.location.href = "login.html";
+                    window.location.href = "../index.html";
                 }
             });
         }
 
         // Cargar usuarios desde la API
         function cargarUsuarios() {
-            fetch("http://localhost:3000/api/admin/users", {
+            fetch("/api/admin/users", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -268,7 +270,11 @@
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-${user.activo ? 'warning' : 'success'}" 
                                         onclick="cambiarEstado(${user.id}, ${user.activo ? 0 : 1}, '${user.type}')">
-                                    ${user.activo ? 'Desactivar' : 'Activar'}
+                                    <i class="fas fa-${user.activo ? 'user-slash' : 'user-check'}"></i>
+                                </button>
+                                <button class="btn btn-danger" 
+                                        onclick="borrarUsuario(${user.id}, '${user.type}')">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -294,6 +300,17 @@
                 return;
             }
 
+            // Validación de contraseña
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contraseña insegura',
+                    text: 'La contraseña debe tener al menos 8 caracteres, una letra mayúscula y una letra minúscula.'
+                });
+                return;
+            }
+
             const datos = {
                 nombre,
                 apellido,
@@ -302,7 +319,7 @@
                 rol
             };
 
-            fetch("http://localhost:3000/api/admin/users", {
+            fetch("/api/admin/users", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -355,7 +372,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`http://localhost:3000/api/admin/users/${id}/status`, {
+                    fetch(`/api/admin/users/${id}/status`, {
                         method: "PATCH",
                         headers: {
                             "Content-Type": "application/json",
@@ -379,6 +396,45 @@
                         .catch(error => {
                             console.error("Error:", error);
                             Swal.fire('Error', 'Error al cambiar estado del usuario', 'error');
+                        });
+                }
+            });
+        }
+        // Borrar usuario permanentemente
+        function borrarUsuario(id, type) {
+            Swal.fire({
+                title: '¿Eliminar usuario definitivamente?',
+                text: "Esta acción borrará al usuario de la base de datos y no se puede deshacer.",
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, borrar para siempre',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/api/admin/users/${id}?type=${type}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    })
+                        .then(async response => {
+                            const data = await response.json();
+                            if (response.ok && data.success) {
+                                Swal.fire(
+                                    '¡Borrado!',
+                                    data.message,
+                                    'success'
+                                );
+                                cargarUsuarios();
+                            } else {
+                                Swal.fire('Error', data.message || 'No se pudo eliminar el usuario', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            Swal.fire('Error', 'Error de conexión o fallo en el servidor. Revise la consola.', 'error');
                         });
                 }
             });
