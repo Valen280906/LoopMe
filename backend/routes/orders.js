@@ -68,7 +68,8 @@ router.post("/create", clienteAuth, async (req, res) => {
             });
         }
 
-        const connection = db.promise();
+        const pool = db.promise();
+        const connection = await pool.getConnection();
 
         try {
             // 0. Verificar idempotencia (evitar pedidos duplicados)
@@ -79,6 +80,7 @@ router.post("/create", clienteAuth, async (req, res) => {
                 );
 
                 if (existingPayment.length > 0) {
+                    connection.release();
                     return res.json({
                         success: true,
                         message: "Pedido ya procesado (idempotencia)",
@@ -111,15 +113,11 @@ router.post("/create", clienteAuth, async (req, res) => {
                     throw new Error(`Stock insuficiente para el producto: ${item.nombre}`);
                 }
 
-                console.log(`[STOCK DEBUG] Insertando ${item.cantidad} unidades para producto ID ${item.id}. Stock actual antes: ${stockRows[0].stock_actual}`);
-
                 await connection.execute(
                     `INSERT INTO detalles_pedido (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
                      VALUES (?, ?, ?, ?, ?)`,
                     [orderId, item.id, item.cantidad, item.precio, item.precio * item.cantidad]
                 );
-
-                // El stock se actualiza automáticamente mediante el trigger DB: tr_update_stock_after_sale
             }
 
             // 5. Crear registro de pago
@@ -130,9 +128,6 @@ router.post("/create", clienteAuth, async (req, res) => {
             );
 
             await connection.commit();
-
-            // Enviar email de confirmación (simulado)
-            console.log(`Pedido #${orderId} creado exitosamente para cliente ${req.cliente.email}`);
 
             res.json({
                 success: true,

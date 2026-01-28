@@ -140,6 +140,6 @@ CREATE TABLE `usuarios` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Dumping data for table `usuarios` */
-INSERT INTO `usuarios` (`id`, `nombre`, `apellido`, `email`, `password`, `rol`, `activo`, `fecha_registro`) VALUES (1, 'Admin', 'LoopMe', 'admin@loopme.com', '$2b$10$dXfRP8YDnHlt.eOBLTzDhmm6P4leYmCqSanTm/8TxNJjQCJyPnm', 'Administrador', 1, '2026-01-28 00:52:43');
+INSERT INTO `usuarios` (`id`, `nombre`, `apellido`, `email`, `password`, `rol`, `activo`, `fecha_registro`) VALUES (1, 'Admin', 'LoopMe', 'admin@loopme.com', '$2b$10$PXMvuy5w7A6aUSXbdRQdWeRSIhloZMJNtbQEMk4blkFGCnpZjNjma', 'Administrador', 1, '2026-01-28 00:52:43');
 
 SET FOREIGN_KEY_CHECKS = 1;
