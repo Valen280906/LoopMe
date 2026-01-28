@@ -17,6 +17,11 @@ CREATE TABLE `alertas_stock` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `categorias` */
+CREATE TABLE `categorias` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Dumping data for table `categorias` */
@@ -33,9 +38,33 @@ INSERT INTO `categorias` (`id`, `nombre`, `descripcion`) VALUES (10, 'Trajes de 
 INSERT INTO `categorias` (`id`, `nombre`, `descripcion`) VALUES (11, 'Ropa Deportiva', 'Leggings, tops y prendas para entrenamiento');
 
 /* Table structure for table `clientes` */
+CREATE TABLE `clientes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(120) NOT NULL,
+  `apellido` varchar(120) DEFAULT NULL,
+  `email` varchar(120) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `telefono` varchar(25) DEFAULT NULL,
+  `direccion` varchar(255) DEFAULT NULL,
+  `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP,
+  `activo` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `detalles_pedido` */
+CREATE TABLE `detalles_pedido` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pedido_id` int NOT NULL,
+  `producto_id` int NOT NULL,
+  `cantidad` int NOT NULL,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pedido_id` (`pedido_id`),
+  KEY `producto_id` (`producto_id`),
+  CONSTRAINT `detalles_pedido_ibfk_1` FOREIGN KEY (`pedido_id`) REFERENCES `pedidos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `detalles_pedido_ibfk_2` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `inventario` */
@@ -52,9 +81,32 @@ CREATE TABLE `inventario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `pagos` */
+CREATE TABLE `pagos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pedido_id` int NOT NULL,
+  `metodo` enum('Efectivo','Tarjeta','Stripe') NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `fecha_pago` datetime DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('Aprobado','Rechazado') DEFAULT 'Aprobado',
+  `referencia` varchar(120) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pedido_id` (`pedido_id`),
+  CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`pedido_id`) REFERENCES `pedidos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `pedidos` */
+CREATE TABLE `pedidos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cliente_id` int DEFAULT NULL,
+  `usuario_id` int NOT NULL,
+  `fecha_pedido` datetime DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('Pendiente','EnPreparacion','Enviado','Entregado','Cancelado') DEFAULT 'Pendiente',
+  `total` decimal(10,2) DEFAULT '0.00',
+  PRIMARY KEY (`id`),
+  KEY `cliente_id` (`cliente_id`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `pedidos_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Table structure for table `productos` */
@@ -85,8 +137,9 @@ CREATE TABLE `usuarios` (
   `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /* Dumping data for table `usuarios` */
 INSERT INTO `usuarios` (`id`, `nombre`, `apellido`, `email`, `password`, `rol`, `activo`, `fecha_registro`) VALUES (1, 'Admin', 'LoopMe', 'admin@loopme.com', '$2b$10$dXfRP8YDnHlt.eOBLTzDhmm6P4leYmCqSanTm/8TxNJjQCJyPnm', 'Administrador', 1, '2026-01-28 00:52:43');
 
+SET FOREIGN_KEY_CHECKS = 1;
